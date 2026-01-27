@@ -1,11 +1,10 @@
-import { Menu, X } from "lucide-react";
+import { Menu, X, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // const navItems = ["Product", "Solutions", "Developers", "Pricing"];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 lg:px-12">
@@ -15,37 +14,24 @@ const Navbar = () => {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">IR</span>
           </div>
-          <span className="font-serif text-lg font-semibold text-foreground tracking-tight">
+          <span className="font-serif text-lg font-semibold">
             Refinery
           </span>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-8">
-          {/* {navItems.map((item) => (
-            <a
-              key={item}
-              href="#"
-              className="nav-link text-sm font-medium"
-            >
-              {item}
-            </a>
-          ))} */}
+        {/* Desktop */}
+        <div className="hidden lg:flex items-center gap-4">
+          <Link to="/raise-ticket">
+            <Button className="btn-gradient flex items-center gap-2">
+              <PlusCircle size={16} />
+              Raise Ticket
+            </Button>
+          </Link>
         </div>
 
-        {/* CTA Button */}
-        {/* <div className="hidden lg:block">
-          <Button 
-            variant="outline" 
-            className="rounded-full px-6 border-border text-foreground hover:bg-secondary hover:text-foreground"
-          >
-            LAUNCH CONSOLE
-          </Button>
-        </div> */}
-
-        {/* Mobile Menu Toggle */}
+        {/* Mobile toggle */}
         <button
-          className="lg:hidden text-foreground"
+          className="lg:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -54,24 +40,12 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 glass-card mt-2 mx-4 rounded-2xl p-6 animate-slide-up">
-          <div className="flex flex-col gap-4">
-            {/* {navItems.map((item) => (
-              <a
-                key={item}
-                href="#"
-                className="nav-link text-sm font-medium py-2"
-              >
-                {item}
-              </a>
-            ))} */}
-            {/* <Button 
-              variant="outline" 
-              className="rounded-full mt-4 border-border text-foreground hover:bg-secondary"
-            >
-              LAUNCH CONSOLE
-            </Button> */}
-          </div>
+        <div className="lg:hidden glass-card mt-2 mx-4 rounded-2xl p-6">
+          <Link to="/raise-ticket">
+            <Button className="w-full btn-gradient">
+              Raise Ticket
+            </Button>
+          </Link>
         </div>
       )}
     </nav>
