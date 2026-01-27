@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navItems = ["Product", "Solutions", "Developers", "Pricing"];
+  // const navItems = ["Product", "Solutions", "Developers", "Pricing"];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 lg:px-12">
@@ -22,7 +22,7 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
-          {navItems.map((item) => (
+          {/* {navItems.map((item) => (
             <a
               key={item}
               href="#"
@@ -30,7 +30,7 @@ const Navbar = () => {
             >
               {item}
             </a>
-          ))}
+          ))} */}
         </div>
 
         {/* CTA Button */}
@@ -56,7 +56,7 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="lg:hidden absolute top-full left-0 right-0 glass-card mt-2 mx-4 rounded-2xl p-6 animate-slide-up">
           <div className="flex flex-col gap-4">
-            {navItems.map((item) => (
+            {/* {navItems.map((item) => (
               <a
                 key={item}
                 href="#"
@@ -64,7 +64,7 @@ const Navbar = () => {
               >
                 {item}
               </a>
-            ))}
+            ))} */}
             {/* <Button 
               variant="outline" 
               className="rounded-full mt-4 border-border text-foreground hover:bg-secondary"
