@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 const SignupCard = () => {
   const [name, setName] = useState("");
@@ -16,8 +17,36 @@ const SignupCard = () => {
 
     try {
       /* ----------------------------------
-         1️⃣ CHECK nr_users (REAL USERS)
-         ---------------------------------- */
+         0️⃣ CHECK ADMIN EMAIL
+      ---------------------------------- */
+      const { data: admin } = await supabase
+        .from("nr_admins")
+        .select("nr_id")
+        .eq("nr_email", email)
+        .maybeSingle();
+
+      if (admin) {
+        toast.info("Account already exists. Please login.");
+        return;
+      }
+
+      /* ----------------------------------
+         1️⃣ CHECK AUTH USERS (SAFE PROBE)
+      ---------------------------------- */
+      const { error: authProbeError } =
+        await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false },
+        });
+
+      if (!authProbeError) {
+        toast.info("Account already exists. Please login.");
+        return;
+      }
+
+      /* ----------------------------------
+         2️⃣ CHECK nr_users (REAL USERS)
+      ---------------------------------- */
       const { data: existingUser, error: userError } = await supabase
         .from("nr_users")
         .select("nr_id")
@@ -27,13 +56,13 @@ const SignupCard = () => {
       if (userError) throw userError;
 
       if (existingUser) {
-        alert("Your account already exists. Please login.");
+        toast.info("Account already exists. Please login.");
         return;
       }
 
       /* ----------------------------------
-         2️⃣ CHECK SIGNUP REQUESTS
-         ---------------------------------- */
+         3️⃣ CHECK SIGNUP REQUESTS
+      ---------------------------------- */
       const { data: requests, error: reqError } = await supabase
         .from("nr_signup_requests")
         .select("nr_status")
@@ -50,14 +79,14 @@ const SignupCard = () => {
         );
 
         if (hasPending) {
-          alert(
+          toast.warning(
             "Signup request already submitted. Please wait for admin approval."
           );
           return;
         }
 
         if (hasApproved) {
-          alert(
+          toast.success(
             "Your account is already approved. Please login."
           );
           return;
@@ -67,8 +96,8 @@ const SignupCard = () => {
       }
 
       /* ----------------------------------
-         3️⃣ INSERT NEW SIGNUP REQUEST
-         ---------------------------------- */
+         4️⃣ INSERT NEW SIGNUP REQUEST
+      ---------------------------------- */
       const { error: insertError } = await supabase
         .from("nr_signup_requests")
         .insert({
@@ -79,14 +108,14 @@ const SignupCard = () => {
 
       if (insertError) throw insertError;
 
-      alert(
+      toast.success(
         "Signup request submitted successfully. Please wait for admin approval."
       );
 
       setName("");
       setEmail("");
     } catch (err: any) {
-      alert(err.message || "Signup failed");
+      toast.error(err.message || "Signup failed");
     } finally {
       setLoading(false);
     }
