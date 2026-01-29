@@ -16,7 +16,7 @@ const AuthCallback = () => {
       }
 
       if (data.session) {
-        // ✅ Session established → go to reset password page
+        
         toast.success("Access verified. Please reset your password.");
         window.location.href = "/reset-password";
       } else {
@@ -36,3 +36,4 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
+
