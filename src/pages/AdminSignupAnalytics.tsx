@@ -9,10 +9,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { toast } from "sonner";
-/* ================= CONSTANTS ================= */
+
 const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#f59e0b"];
 
-/* ================= COMPONENT ================= */
+
 const AdminSignupAnalytics = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -61,7 +61,7 @@ const AdminSignupAnalytics = () => {
     <div className="p-10 space-y-6">
       <h1 className="text-2xl font-semibold">Signup Analytics</h1>
 
-      {/* STATS */}
+    
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total" value={stats.total} />
         <Stat label="Pending" value={stats.pending} />
@@ -69,7 +69,7 @@ const AdminSignupAnalytics = () => {
         <Stat label="Rejected" value={stats.rejected} />
       </div>
 
-      {/* CHART */}
+      
       <div className="border rounded p-4">
         <p className="mb-2 font-medium">Signup Status Distribution</p>
         <ResponsiveContainer width="100%" height={300}>
@@ -92,7 +92,7 @@ const AdminSignupAnalytics = () => {
   );
 };
 
-/* ================= STAT CARD ================= */
+
 const Stat = ({ label, value }: { label: string; value: number }) => (
   <div className="border rounded p-4">
     <p className="text-sm text-muted-foreground">{label}</p>
@@ -101,3 +101,4 @@ const Stat = ({ label, value }: { label: string; value: number }) => (
 );
 
 export default AdminSignupAnalytics;
+
