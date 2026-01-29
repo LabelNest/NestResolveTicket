@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 
-/* ================= TYPES ================= */
+
 type Ticket = {
   id: string;
   issue_origin: string;
@@ -22,15 +22,15 @@ type Ticket = {
   status: string;
 };
 
-/* ================= COLORS ================= */
+
 const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
 
-/* ================= COMPONENT ================= */
+
 const AdminTicketAnalytics = () => {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
-  /* ================= INIT ================= */
+
   useEffect(() => {
     init();
   }, []);
@@ -56,7 +56,7 @@ const AdminTicketAnalytics = () => {
     loadTickets();
   };
 
-  /* ================= LOAD ALL TICKETS ================= */
+
   const loadTickets = async () => {
     const { data, error } = await supabase
       .from("nr_resolve_tickets")
@@ -73,7 +73,6 @@ const AdminTicketAnalytics = () => {
     toast.success("Ticket analytics loaded");
   };
 
-  /* ================= HELPERS ================= */
   const countBy = (key: keyof Ticket) => {
     const map: Record<string, number> = {};
     tickets.forEach(t => {
@@ -91,12 +90,12 @@ const AdminTicketAnalytics = () => {
   const medium = tickets.filter(t => t.priority === "MEDIUM").length;
   const low = tickets.filter(t => t.priority === "LOW").length;
 
-  /* ================= UI ================= */
+
   return (
     <div className="p-10 space-y-8">
       <h1 className="text-2xl font-semibold">Ticket Analytics</h1>
 
-      {/* ================= STATS ================= */}
+
       <div className="grid grid-cols-6 gap-4">
         <Stat label="Total Tickets" value={total} />
         <Stat label="Internal" value={internal} />
@@ -107,9 +106,9 @@ const AdminTicketAnalytics = () => {
         <Stat label="Low" value={low} />
       </div>
 
-      {/* ================= CHARTS ================= */}
+   
       <div className="grid grid-cols-3 gap-6">
-        {/* By Status */}
+      
         <Chart title="By Status">
           <PieChart>
             <Pie
@@ -126,7 +125,7 @@ const AdminTicketAnalytics = () => {
           </PieChart>
         </Chart>
 
-        {/* By Priority */}
+       
         <Chart title="By Priority">
           <BarChart data={countBy("priority")}>
             <XAxis dataKey="name" />
@@ -136,7 +135,7 @@ const AdminTicketAnalytics = () => {
           </BarChart>
         </Chart>
 
-        {/* Internal vs External */}
+        
         <Chart title="Internal vs External">
           <BarChart data={countBy("issue_origin")}>
             <XAxis dataKey="name" />
@@ -150,7 +149,7 @@ const AdminTicketAnalytics = () => {
   );
 };
 
-/* ================= SMALL COMPONENTS ================= */
+
 const Stat = ({ label, value }: { label: string; value: number }) => (
   <div className="border rounded p-4">
     <p className="text-sm">{label}</p>
@@ -168,3 +167,4 @@ const Chart = ({ title, children }: any) => (
 );
 
 export default AdminTicketAnalytics;
+
