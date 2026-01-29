@@ -1,22 +1,3 @@
-// // supabase/functions/check-user-exists/index.ts
-// import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-// import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// serve(async (req) => {
-//   const { email } = await req.json();
-
-//   const supabaseAdmin = createClient(
-//     Deno.env.get("SUPABASE_URL")!,
-//     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-//   );
-
-//   const { data } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-
-//   return new Response(
-//     JSON.stringify({ exists: !!data }),
-//     { headers: { "Content-Type": "application/json" } }
-//   );
-// });
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -47,7 +28,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    /* ---------- 1️⃣ CHECK AUTH USERS ---------- */
+    /*  CHECK AUTH USERS  */
     const { data, error } =
       await supabaseAdmin.auth.admin.getUserByEmail(email);
 
@@ -66,7 +47,7 @@ serve(async (req) => {
       );
     }
 
-    /* ---------- 2️⃣ CHECK SIGNUP REQUESTS ---------- */
+    /* CHECK SIGNUP REQUESTS */
     const { data: requests, error: reqError } = await supabaseAdmin
       .from("nr_signup_requests")
       .select("nr_status")
@@ -104,7 +85,7 @@ serve(async (req) => {
       // only REJECTED → fall through
     }
 
-    /* ---------- 3️⃣ NEW USER ---------- */
+    /* NEW USER  */
     return new Response(
       JSON.stringify({ status: "NEW" }),
       { status: 200, headers: corsHeaders }
@@ -117,3 +98,4 @@ serve(async (req) => {
     );
   }
 });
+
