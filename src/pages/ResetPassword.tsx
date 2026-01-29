@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -9,13 +11,14 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // 🔑 VERY IMPORTANT: wait for recovery session
+  
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setReady(true);
       } else {
-        alert("Invalid or expired reset link");
+        // alert("Invalid or expired reset link");
+        toast.error("Invalid or expired reset link");
         window.location.href = "/";
       }
     });
@@ -25,7 +28,8 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (password !== confirm) {
-      alert("Passwords do not match");
+      // alert("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
 
@@ -38,11 +42,13 @@ const ResetPassword = () => {
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      // alert(error.message);
+      toast.error(error.message);
       return;
     }
 
-    alert("Password updated successfully. Please login.");
+    // alert("Password updated successfully. Please login.");
+    toast.success("Password updated successfully. Please login.");
     window.location.href = "/";
   };
 
