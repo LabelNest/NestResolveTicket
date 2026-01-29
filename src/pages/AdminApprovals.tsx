@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-/* ================= TYPES ================= */
+
 type SignupRequest = {
   nr_id: string;
   nr_name: string;
@@ -21,13 +21,13 @@ type SignupRequest = {
   nr_status: string;
 };
 
-/* ================= CONSTANTS ================= */
+
 const APPROVE_FUNCTION_URL =
   "https://evugaodpzepyjonlrptn.supabase.co/functions/v1/approve-user";
 
 const COLORS = ["#2563eb", "#16a34a", "#dc2626"];
 
-/* ================= COMPONENT ================= */
+
 const AdminApprovals = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState<SignupRequest[]>([]);
@@ -38,7 +38,7 @@ const AdminApprovals = () => {
     role: "user",
   });
 
-  /* ================= INIT ================= */
+  
   useEffect(() => {
     init();
   }, []);
@@ -63,7 +63,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  /* ================= LOAD ================= */
+  
   const loadRequests = async () => {
     const { data } = await supabase
       .from("nr_signup_requests")
@@ -73,7 +73,7 @@ const AdminApprovals = () => {
     setRequests(data || []);
   };
 
-  /* ================= APPROVE ================= */
+ 
   const approve = async (req: SignupRequest) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
@@ -102,7 +102,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  /* ================= REJECT ================= */
+  
   const reject = async (id: string) => {
     await supabase
       .from("nr_signup_requests")
@@ -112,12 +112,12 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  /* ================= CREATE USER (REUSE APPROVE) ================= */
+  
   const createUser = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
 
-    // 1️⃣ Create signup request
+    
     const { data: request, error } = await supabase
       .from("nr_signup_requests")
       .insert({
@@ -135,7 +135,7 @@ const AdminApprovals = () => {
       return;
     }
 
-    // 2️⃣ Call SAME approve-user function
+    
     const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
       headers: {
@@ -162,7 +162,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  /* ================= STATS ================= */
+  
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.nr_status === "PENDING").length,
@@ -180,7 +180,7 @@ const AdminApprovals = () => {
     r => r.nr_status === "PENDING"
   );
 
-  /* ================= UI ================= */
+  
   return (
     <div className="p-10 space-y-6">
       <div className="flex justify-between items-center">
@@ -200,7 +200,7 @@ const AdminApprovals = () => {
         <Stat label="Rejected" value={stats.rejected} />
       </div>
 
-      {/* CHART */}
+      
       {/* <div className="border rounded p-4">
         <p className="mb-2 font-medium">Signup Status</p>
         <ResponsiveContainer width="100%" height={250}>
@@ -215,7 +215,7 @@ const AdminApprovals = () => {
         </ResponsiveContainer>
       </div> */}
 
-      {/* REQUESTS */}
+      
       {pendingRequests.map(r => (
         <div
           key={r.nr_id}
@@ -234,7 +234,7 @@ const AdminApprovals = () => {
         </div>
       ))}
 
-      {/* ADD USER MODAL */}
+      
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white text-black p-6 w-96 space-y-3 rounded">
@@ -283,7 +283,7 @@ const AdminApprovals = () => {
   );
 };
 
-/* ================= STAT ================= */
+
 const Stat = ({ label, value }: { label: string; value: number }) => (
   <div className="border rounded p-4">
     <p className="text-sm">{label}</p>
@@ -292,4 +292,5 @@ const Stat = ({ label, value }: { label: string; value: number }) => (
 );
 
 export default AdminApprovals;
+
 
