@@ -14,13 +14,13 @@ const LoginCard = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* ================= LOGIN ================= */
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      /* 1️⃣ AUTH LOGIN */
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -34,7 +34,7 @@ const LoginCard = () => {
 
       const authUser = data.user;
 
-      /* 2️⃣ ADMIN CHECK */
+      
       const { data: admin, error: adminError } = await supabase
         .from("nr_admins")
         .select("nr_id")
@@ -55,7 +55,7 @@ const LoginCard = () => {
         return;
       }
 
-      /* 3️⃣ ENSURE USER PROFILE EXISTS */
+     
       const { data: existingUser, error: userCheckError } = await supabase
         .from("nr_users")
         .select("nr_id")
@@ -81,7 +81,7 @@ const LoginCard = () => {
               "User",
             nr_role: "user",
             nr_status: "active",
-            nr_tenant_id: null, // IMPORTANT: must be nullable in DB
+            nr_tenant_id: null, // must be nullable in DB
           });
 
         if (insertError) {
@@ -92,14 +92,14 @@ const LoginCard = () => {
         }
       }
 
-      /* 4️⃣ REDIRECT USER */
+      
       window.location.href = "/dashboard";
     } finally {
       setLoading(false);
     }
   };
 
-  /* ================= FORGOT PASSWORD ================= */
+  
   const handleForgotPassword = async () => {
     if (!email) {
       // alert("Please enter your email first");
@@ -120,7 +120,7 @@ const LoginCard = () => {
     }
   };
 
-  /* ================= UI ================= */
+  
   return (
     <div className="glass-card p-8 sm:p-10 w-full max-w-md animate-slide-up">
       <div className="text-center mb-8">
@@ -133,7 +133,7 @@ const LoginCard = () => {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-5">
-        {/* Email */}
+        
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Email Address
@@ -150,7 +150,7 @@ const LoginCard = () => {
           </div>
         </div>
 
-        {/* Password */}
+        
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Master Credential
@@ -201,5 +201,6 @@ const LoginCard = () => {
 };
 
 export default LoginCard;
+
 
 
