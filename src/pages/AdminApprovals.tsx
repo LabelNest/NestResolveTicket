@@ -1,360 +1,61 @@
-// import { useEffect, useState } from "react";
-// import { supabase } from "@/lib/supabase";
-// import { useNavigate } from "react-router-dom";
-// import { Button } from "@/components/ui/button";
-
-// type SignupRequest = {
-//   nr_id: string;
-//   nr_name: string;
-//   nr_email: string;
-//   nr_status: string;
-// };
-
-// const AdminApprovals = () => {
-//   const [requests, setRequests] = useState<SignupRequest[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     init();
-//   }, []);
-
-//   const init = async () => {
-//     const {
-//       data: { session },
-//     } = await supabase.auth.getSession();
-
-//     // 🔐 Must be logged in
-//     if (!session) {
-//       navigate("/");
-//       return;
-//     }
-
-//     // 🔐 Admin check (CORRECT WAY)
-//     const role = session.user.user_metadata?.role;
-
-//     if (role !== "admin") {
-//       alert("Access denied");
-//       navigate("/");
-//       return;
-//     }
-
-//     await loadRequests();
-//     setLoading(false);
-//   };
-
-//   const loadRequests = async () => {
-//     const { data, error } = await supabase
-//       .from("nr_signup_requests")
-//       .select("nr_id, nr_name, nr_email, nr_status")
-//       .eq("nr_status", "PENDING");
-
-//     if (!error && data) {
-//       setRequests(data);
-//     }
-//   };
-
-//   const approveUser = async (req: SignupRequest) => {
-//     // 1️⃣ Update DB
-//     const { error } = await supabase
-//       .from("nr_signup_requests")
-//       .update({ nr_status: "APPROVED" })
-//       .eq("nr_id", req.nr_id);
-
-//     if (error) {
-//       alert(error.message);
-//       return;
-//     }
-
-//     // 2️⃣ Send approval email
-//     await fetch("/functions/v1/send-approval-email", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         email: req.nr_email,
-//         name: req.nr_name,
-//       }),
-//     });
-
-//     // 3️⃣ Update UI
-//     setRequests((prev) => prev.filter((r) => r.nr_id !== req.nr_id));
-//   };
-
-//   if (loading) {
-//     return <div className="p-10">Loading...</div>;
-//   }
-
-//   return (
-//     <div className="min-h-screen p-10">
-//       <h1 className="text-2xl font-semibold mb-6">
-//         Admin – Signup Approvals
-//       </h1>
-
-//       {requests.length === 0 ? (
-//         <p className="text-muted-foreground">
-//           No pending signup requests.
-//         </p>
-//       ) : (
-//         <div className="space-y-4">
-//           {requests.map((req) => (
-//             <div
-//               key={req.nr_id}
-//               className="border rounded-lg p-4 flex justify-between items-center"
-//             >
-//               <div>
-//                 <p className="font-medium">{req.nr_name}</p>
-//                 <p className="text-sm text-muted-foreground">
-//                   {req.nr_email}
-//                 </p>
-//               </div>
-
-//               <Button
-//                 className="btn-gradient"
-//                 onClick={() => approveUser(req)}
-//               >
-//                 Approve
-//               </Button>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AdminApprovals;
-// import { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { supabase } from "@/lib/supabaseClient";
-// import { Button } from "@/components/ui/button";
-
-// type SignupRequest = {
-//   nr_id: string;
-//   nr_name: string;
-//   nr_email: string;
-//   nr_role: string;
-//   nr_created_at: string;
-// };
-
-// const SUPABASE_FUNCTION_URL =
-//   "https://evugaodpzepyjonlrptn.supabase.co/functions/v1";
-
-// const AdminApprovals = () => {
-//   const [requests, setRequests] = useState<SignupRequest[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     init();
-//   }, []);
-
-//   // 🔐 Admin validation
-//   const init = async () => {
-//     const {
-//       data: { session },
-//     } = await supabase.auth.getSession();
-
-//     if (!session?.user?.email) {
-//       navigate("/");
-//       return;
-//     }
-
-//     // ✅ Admin check via table (safe, no auth hacks)
-//     const { data: admin, error } = await supabase
-//       .from("nr_admins")
-//       .select("nr_email")
-//       .eq("nr_email", session.user.email)
-//       .single();
-
-//     if (error || !admin) {
-//       alert("Access denied");
-//       navigate("/");
-//       return;
-//     }
-
-//     await loadRequests();
-//     setLoading(false);
-//   };
-
-//   // 📥 Load pending users
-//   const loadRequests = async () => {
-//     const { data, error } = await supabase
-//       .from("nr_signup_requests")
-//       .select("nr_id, nr_name, nr_email, nr_role, nr_created_at")
-//       .eq("nr_status", "PENDING")
-//       .order("nr_created_at", { ascending: false });
-
-//     if (!error && data) {
-//       setRequests(data);
-//     }
-//   };
-
-//   // ✅ APPROVE USER
-//   const approveRequest = async (req: SignupRequest) => {
-//     try {
-//       const {
-//         data: { session },
-//       } = await supabase.auth.getSession();
-
-//       if (!session) {
-//         alert("Session expired");
-//         return;
-//       }
-
-//       const res = await fetch(`${SUPABASE_FUNCTION_URL}/approve-user`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${session.access_token}`,
-//         },
-//         body: JSON.stringify({
-//           email: req.nr_email,
-//           signupRequestId: req.nr_id,
-//         }),
-//       });
-
-//       const result = await res.json();
-
-//       if (!res.ok) {
-//         console.error("Approve error:", result);
-//         alert(result.error || "Approval failed");
-//         return;
-//       }
-
-//       // 🧾 Audit log
-//       await supabase.from("nr_signup_audit").insert({
-//         signup_request_id: req.nr_id,
-//         action: "APPROVED",
-//         acted_by: session.user.email,
-//       });
-
-//       setRequests((prev) => prev.filter((r) => r.nr_id !== req.nr_id));
-//       alert("User approved. Password setup email sent.");
-//     } catch (err) {
-//       console.error("Approval failed:", err);
-//       alert("Something went wrong during approval");
-//     }
-//   };
-
-//   // ❌ REJECT USER
-//   const rejectRequest = async (req: SignupRequest) => {
-//     try {
-//       const {
-//         data: { session },
-//       } = await supabase.auth.getSession();
-
-//       if (!session) return;
-
-//       await supabase
-//         .from("nr_signup_requests")
-//         .update({ nr_status: "REJECTED" })
-//         .eq("nr_id", req.nr_id);
-
-//       await supabase.from("nr_signup_audit").insert({
-//         signup_request_id: req.nr_id,
-//         action: "REJECTED",
-//         acted_by: session.user.email,
-//       });
-
-//       setRequests((prev) => prev.filter((r) => r.nr_id !== req.nr_id));
-//       alert("User rejected");
-//     } catch (err) {
-//       console.error("Reject failed:", err);
-//       alert("Rejection failed");
-//     }
-//   };
-
-//   if (loading) return <div className="p-10">Loading...</div>;
-
-//   return (
-//     <div className="min-h-screen p-10">
-//       <h1 className="text-2xl font-semibold mb-6">
-//         Admin – Signup Approvals
-//       </h1>
-
-//       {requests.length === 0 ? (
-//         <p className="text-muted-foreground">
-//           No pending signup requests.
-//         </p>
-//       ) : (
-//         <div className="space-y-4">
-//           {requests.map((req) => (
-//             <div
-//               key={req.nr_id}
-//               className="border rounded-lg p-4 flex justify-between items-center"
-//             >
-//               <div>
-//                 <p className="font-medium">{req.nr_name}</p>
-//                 <p className="text-sm text-muted-foreground">
-//                   {req.nr_email}
-//                 </p>
-//                 <p className="text-xs text-muted-foreground">
-//                   Role: {req.nr_role}
-//                 </p>
-//               </div>
-
-//               <div className="flex gap-3">
-//                 <Button
-//                   className="btn-gradient"
-//                   onClick={() => approveRequest(req)}
-//                 >
-//                   Approve
-//                 </Button>
-//                 <Button
-//                   variant="destructive"
-//                   onClick={() => rejectRequest(req)}
-//                 >
-//                   Reject
-//                 </Button>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AdminApprovals;
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+/* ================= TYPES ================= */
 type SignupRequest = {
   nr_id: string;
   nr_name: string;
   nr_email: string;
   nr_role: string;
+  nr_status: string;
 };
 
-const FUNCTION_URL =
+/* ================= CONSTANTS ================= */
+const APPROVE_FUNCTION_URL =
   "https://evugaodpzepyjonlrptn.supabase.co/functions/v1/approve-user";
 
-const AdminApprovals = () => {
-  const [requests, setRequests] = useState<SignupRequest[]>([]);
-  const navigate = useNavigate();
+const COLORS = ["#2563eb", "#16a34a", "#dc2626"];
 
+/* ================= COMPONENT ================= */
+const AdminApprovals = () => {
+  const navigate = useNavigate();
+  const [requests, setRequests] = useState<SignupRequest[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "user",
+  });
+
+  /* ================= INIT ================= */
   useEffect(() => {
     init();
   }, []);
 
   const init = async () => {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      navigate("/");
-      return;
-    }
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return navigate("/");
 
     const { data: admin } = await supabase
       .from("nr_admins")
       .select("nr_email")
-      .eq("nr_email", session.session.user.email)
+      .eq("nr_email", data.session.user.email)
       .maybeSingle();
 
     if (!admin) {
-      alert("Access denied");
+      // alert("Access denied");
+      toast.error("Access denied");
       navigate("/");
       return;
     }
@@ -362,23 +63,26 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
+  /* ================= LOAD ================= */
   const loadRequests = async () => {
     const { data } = await supabase
       .from("nr_signup_requests")
-      .select("nr_id, nr_name, nr_email, nr_role")
-      .eq("nr_status", "PENDING");
+      .select("*")
+      .order("nr_created_at", { ascending: false });
 
     setRequests(data || []);
   };
 
+  /* ================= APPROVE ================= */
   const approve = async (req: SignupRequest) => {
     const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
 
-    const res = await fetch(FUNCTION_URL, {
+    const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${data.session.access_token}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${data.session?.access_token}`,
       },
       body: JSON.stringify({
         email: req.nr_email,
@@ -388,14 +92,17 @@ const AdminApprovals = () => {
 
     const result = await res.json();
     if (!res.ok) {
-      alert(result.error);
+      // alert(result.error || "Approval failed");
+      toast.error(result.error || "Approval failed");
       return;
     }
 
-    alert("Approved & email sent");
+    // alert("Approved & email sent");
+    toast.success("Approved & email sent");
     loadRequests();
   };
 
+  /* ================= REJECT ================= */
   const reject = async (id: string) => {
     await supabase
       .from("nr_signup_requests")
@@ -405,14 +112,117 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  return (
-    <div className="p-10">
-      <h1 className="text-2xl mb-6">Admin – Signup Approvals</h1>
+  /* ================= CREATE USER (REUSE APPROVE) ================= */
+  const createUser = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
 
-      {requests.map((r) => (
-        <div key={r.nr_id} className="border p-4 mb-3 flex justify-between">
+    // 1️⃣ Create signup request
+    const { data: request, error } = await supabase
+      .from("nr_signup_requests")
+      .insert({
+        nr_name: newUser.name,
+        nr_email: newUser.email,
+        nr_role: newUser.role,
+        nr_status: "PENDING",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      // alert("Failed to create signup request");
+      toast.error("Failed to create signup request");
+      return;
+    }
+
+    // 2️⃣ Call SAME approve-user function
+    const res = await fetch(APPROVE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${data.session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: request.nr_email,
+        signupRequestId: request.nr_id,
+      }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      // alert(result.error || "User approval failed");
+      toast.error(result.error || "User approval failed");
+      return;
+    }
+
+    // alert("User created & approved");
+    toast.success("User created & approved");
+    setShowAdd(false);
+    setNewUser({ name: "", email: "", role: "user" });
+    loadRequests();
+  };
+
+  /* ================= STATS ================= */
+  const stats = {
+    total: requests.length,
+    pending: requests.filter(r => r.nr_status === "PENDING").length,
+    approved: requests.filter(r => r.nr_status === "APPROVED").length,
+    rejected: requests.filter(r => r.nr_status === "REJECTED").length,
+  };
+
+  const chartData = [
+    { name: "Pending", value: stats.pending },
+    { name: "Approved", value: stats.approved },
+    { name: "Rejected", value: stats.rejected },
+  ];
+
+  const pendingRequests = requests.filter(
+    r => r.nr_status === "PENDING"
+  );
+
+  /* ================= UI ================= */
+  return (
+    <div className="p-10 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-semibold">
+          Signup Approvals
+        </h1>
+        <Button onClick={() => setShowAdd(true)}>
+          Add New User
+        </Button>
+      </div>
+
+      {/* STATS */}
+      <div className="grid grid-cols-4 gap-4">
+        <Stat label="Total" value={stats.total} />
+        <Stat label="Pending" value={stats.pending} />
+        <Stat label="Approved" value={stats.approved} />
+        <Stat label="Rejected" value={stats.rejected} />
+      </div>
+
+      {/* CHART */}
+      {/* <div className="border rounded p-4">
+        <p className="mb-2 font-medium">Signup Status</p>
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie data={chartData} dataKey="value" outerRadius={90}>
+              {chartData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div> */}
+
+      {/* REQUESTS */}
+      {pendingRequests.map(r => (
+        <div
+          key={r.nr_id}
+          className="border rounded p-4 flex justify-between"
+        >
           <div>
-            <p>{r.nr_name}</p>
+            <p className="font-medium">{r.nr_name}</p>
             <p className="text-sm">{r.nr_email}</p>
           </div>
           <div className="flex gap-2">
@@ -423,8 +233,63 @@ const AdminApprovals = () => {
           </div>
         </div>
       ))}
+
+      {/* ADD USER MODAL */}
+      {showAdd && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white text-black p-6 w-96 space-y-3 rounded">
+            <h2 className="text-lg font-semibold">Add New User</h2>
+
+            <input
+              className="border p-2 w-full"
+              placeholder="Name"
+              value={newUser.name}
+              onChange={e =>
+                setNewUser({ ...newUser, name: e.target.value })
+              }
+            />
+
+            <input
+              className="border p-2 w-full"
+              placeholder="Email"
+              value={newUser.email}
+              onChange={e =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+            />
+
+            <select
+              className="border p-2 w-full"
+              value={newUser.role}
+              onChange={e =>
+                setNewUser({ ...newUser, role: e.target.value })
+              }
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setShowAdd(false)}
+                className="bg-gray-200 text-black hover:bg-gray-300">
+                Cancel
+              </Button>
+              <Button onClick={createUser}>Create</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+/* ================= STAT ================= */
+const Stat = ({ label, value }: { label: string; value: number }) => (
+  <div className="border rounded p-4">
+    <p className="text-sm">{label}</p>
+    <p className="text-xl font-semibold">{value}</p>
+  </div>
+);
+
 export default AdminApprovals;
+
