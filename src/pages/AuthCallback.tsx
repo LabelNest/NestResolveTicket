@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
+
 
 const AuthCallback = () => {
   useEffect(() => {
@@ -8,15 +10,18 @@ const AuthCallback = () => {
 
       if (error) {
         console.error(error);
-        alert("Authentication failed");
+        // alert("Authentication failed");
+        toast.error("Authentication failed");
         return;
       }
 
       if (data.session) {
         // ✅ Session established → go to reset password page
+        toast.success("Access verified. Please reset your password.");
         window.location.href = "/reset-password";
       } else {
-        alert("No session found");
+        // alert("No session found");
+        toast.error("No session found");
       }
     };
 
