@@ -16,9 +16,7 @@ const SignupCard = () => {
     setLoading(true);
 
     try {
-      /* ----------------------------------
-         0️⃣ CHECK ADMIN EMAIL
-      ---------------------------------- */
+
       const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
@@ -30,9 +28,7 @@ const SignupCard = () => {
         return;
       }
 
-      /* ----------------------------------
-         1️⃣ CHECK AUTH USERS (SAFE PROBE)
-      ---------------------------------- */
+
       const { error: authProbeError } =
         await supabase.auth.signInWithOtp({
           email,
@@ -44,9 +40,7 @@ const SignupCard = () => {
         return;
       }
 
-      /* ----------------------------------
-         2️⃣ CHECK nr_users (REAL USERS)
-      ---------------------------------- */
+
       const { data: existingUser, error: userError } = await supabase
         .from("nr_users")
         .select("nr_id")
@@ -60,9 +54,7 @@ const SignupCard = () => {
         return;
       }
 
-      /* ----------------------------------
-         3️⃣ CHECK SIGNUP REQUESTS
-      ---------------------------------- */
+
       const { data: requests, error: reqError } = await supabase
         .from("nr_signup_requests")
         .select("nr_status")
@@ -92,12 +84,10 @@ const SignupCard = () => {
           return;
         }
 
-        // ✅ Only REJECTED → allow reapply
+       
       }
 
-      /* ----------------------------------
-         4️⃣ INSERT NEW SIGNUP REQUEST
-      ---------------------------------- */
+      
       const { error: insertError } = await supabase
         .from("nr_signup_requests")
         .insert({
@@ -121,7 +111,7 @@ const SignupCard = () => {
     }
   };
 
-  /* ================= UI (UNCHANGED) ================= */
+ 
   return (
     <div className="glass-card p-8 sm:p-10 w-full max-w-md animate-slide-up">
       <div className="text-center mb-8">
@@ -134,7 +124,7 @@ const SignupCard = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Name */}
+       
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Full Name
@@ -150,7 +140,7 @@ const SignupCard = () => {
           </div>
         </div>
 
-        {/* Email */}
+        
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Email Address
@@ -185,3 +175,4 @@ const SignupCard = () => {
 };
 
 export default SignupCard;
+
