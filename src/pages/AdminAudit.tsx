@@ -13,7 +13,7 @@ import {
   Cell,
 } from "recharts";
 
-/* ================= TYPES ================= */
+
 type AdminStat = {
   admin_email: string;
   approved: number;
@@ -23,7 +23,7 @@ type AdminStat = {
 
 const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#f59e0b"];
 
-/* ================= COMPONENT ================= */
+
 const AdminAudit = () => {
   const navigate = useNavigate();
 
@@ -42,12 +42,12 @@ const AdminAudit = () => {
     init();
   }, []);
 
-  /* ================= INIT ================= */
+  
   const init = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return navigate("/");
 
-    // ✅ admin guard
+    
     const { data: admin } = await supabase
       .from("nr_admins_list")
       .select("nr_email")
@@ -60,7 +60,7 @@ const AdminAudit = () => {
     setLoading(false);
   };
 
-  /* ================= LOAD DATA ================= */
+ 
   const loadAuditData = async () => {
     const [
       authUsers,
@@ -94,14 +94,14 @@ const AdminAudit = () => {
     );
   }
 
-  /* ================= UI ================= */
+
   return (
     <div className="p-10 space-y-10">
       <h1 className="text-2xl font-semibold">
         System Overview
       </h1>
 
-      {/* ================= TOP METRICS ================= */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
         <Metric label="Auth Users" value={counts.authUsers} />
         <Metric label="Platform Users" value={counts.platformUsers} />
@@ -109,9 +109,9 @@ const AdminAudit = () => {
         <Metric label="Total Tickets" value={counts.tickets} />
       </div>
 
-      {/* ================= CHARTS ================= */}
+     
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* ADMIN ACTION PIE */}
+       
         <div className="glass-card p-6 rounded-xl">
           <h2 className="mb-4 font-medium">Approval Actions</h2>
           <ResponsiveContainer width="100%" height={260}>
@@ -144,7 +144,7 @@ const AdminAudit = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* ADMIN ACTIVITY BAR */}
+       
         <div className="glass-card p-6 rounded-xl">
           <h2 className="mb-4 font-medium">Admin Activity</h2>
           <ResponsiveContainer width="100%" height={260}>
@@ -162,7 +162,7 @@ const AdminAudit = () => {
         </div>
       </div>
 
-      {/* ================= ADMIN TABLE ================= */}
+      
       <div className="glass-card rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/5">
@@ -207,7 +207,7 @@ const AdminAudit = () => {
   );
 };
 
-/* ================= METRIC CARD ================= */
+
 const Metric = ({ label, value }: any) => (
   <div className="glass-card p-6 rounded-xl">
     <p className="text-sm text-muted-foreground">{label}</p>
@@ -216,3 +216,4 @@ const Metric = ({ label, value }: any) => (
 );
 
 export default AdminAudit;
+
