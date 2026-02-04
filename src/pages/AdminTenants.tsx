@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-/* ================= TYPES ================= */
+
 type Tenant = {
   id: string;
   name: string;
@@ -21,26 +21,26 @@ type Tenant = {
   users_count: number;
 };
 
-/* ================= COMPONENT ================= */
+
 const AdminTenants = () => {
   const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  /* ================= INIT ================= */
+
   useEffect(() => {
     init();
   }, []);
 
   const init = async () => {
-    /* AUTH CHECK */
+    
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       navigate("/");
       return;
     }
 
-    /* ADMIN CHECK */
+  
     const { data: admin } = await supabase
       .from("nr_admins")
       .select("nr_email")
@@ -56,7 +56,7 @@ const AdminTenants = () => {
     loadTenants();
   };
 
-  /* ================= LOAD TENANTS ================= */
+  
   const loadTenants = async () => {
     setLoading(true);
 
@@ -94,7 +94,7 @@ const AdminTenants = () => {
     setLoading(false);
   };
 
-  /* ================= STATS ================= */
+  
   const totalTenants = tenants.length;
   const activeTenants = tenants.filter(t => t.status === "active").length;
   const guestUsers =
@@ -102,12 +102,12 @@ const AdminTenants = () => {
   const internalUsers =
     tenants.find(t => t.code === "LNI")?.users_count ?? 0;
 
-  /* ================= UI ================= */
+  
   return (
     <div className="p-10 space-y-8">
       <h1 className="text-2xl font-semibold">Tenants Overview</h1>
 
-      {/* ================= STATS ================= */}
+    
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total Tenants" value={totalTenants} />
         <Stat label="Active Tenants" value={activeTenants} />
@@ -115,7 +115,7 @@ const AdminTenants = () => {
         <Stat label="Guest Users" value={guestUsers} />
       </div>
 
-      {/* ================= CHART ================= */}
+     
       <div className="border rounded p-4">
         <p className="mb-2 font-medium">Users per Tenant</p>
         <ResponsiveContainer width="100%" height={300}>
@@ -128,7 +128,7 @@ const AdminTenants = () => {
         </ResponsiveContainer>
       </div>
 
-      {/* ================= TABLE ================= */}
+      
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/30">
@@ -167,7 +167,7 @@ const AdminTenants = () => {
   );
 };
 
-/* ================= STAT CARD ================= */
+
 const Stat = ({ label, value }: { label: string; value: number }) => (
   <div className="border rounded p-4">
     <p className="text-sm text-muted-foreground">{label}</p>
@@ -176,3 +176,4 @@ const Stat = ({ label, value }: { label: string; value: number }) => (
 );
 
 export default AdminTenants;
+
