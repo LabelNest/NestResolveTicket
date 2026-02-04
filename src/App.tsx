@@ -23,6 +23,7 @@ import AdminApprovals from "./pages/AdminApprovals";
 import AdminSignupAnalytics from "./pages/AdminSignupAnalytics";
 import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
+import AdminTenants from "./pages/AdminTenants";
 
 const queryClient = new QueryClient();
 
@@ -56,14 +57,15 @@ const App = () => {
 
             
             <Route path="/admin" element={<AdminLayout />}>
-              
+             
               <Route index element={<AdminApprovals />} />
 
-              
+             
               <Route path="approvals" element={<AdminApprovals />} />
               <Route path="signup-analytics" element={<AdminSignupAnalytics />} />
               <Route path="tickets" element={<AdminTickets />} />
               <Route path="audit" element={<AdminAudit />} />
+              <Route path="admin-tenants" element={<AdminTenants />} />
             </Route>
 
             
