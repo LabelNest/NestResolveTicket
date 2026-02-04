@@ -25,6 +25,15 @@ type Ticket = {
 
 const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
 
+const PRIORITY_COLORS: Record<string, string> = {
+  CRITICAL: "#dc2626", 
+  HIGH: "#f97316",     
+  MEDIUM: "#eab308",   
+  LOW: "#22c55e",      
+};
+
+const PRIORITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+
 
 const AdminTicketAnalytics = () => {
   const navigate = useNavigate();
@@ -39,7 +48,6 @@ const AdminTicketAnalytics = () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return navigate("/");
 
-    // ✅ Admin check
     const { data: admin } = await supabase
       .from("nr_admins")
       .select("nr_email")
@@ -47,7 +55,6 @@ const AdminTicketAnalytics = () => {
       .maybeSingle();
 
     if (!admin) {
-      // alert("Access denied");
       toast.error("Access denied");
       navigate("/");
       return;
@@ -56,7 +63,7 @@ const AdminTicketAnalytics = () => {
     loadTickets();
   };
 
-
+  
   const loadTickets = async () => {
     const { data, error } = await supabase
       .from("nr_resolve_tickets")
@@ -64,7 +71,6 @@ const AdminTicketAnalytics = () => {
 
     if (error) {
       console.error(error);
-      // alert("Failed to load tickets");
       toast.error("Failed to load tickets");
       return;
     }
@@ -73,6 +79,7 @@ const AdminTicketAnalytics = () => {
     toast.success("Ticket analytics loaded");
   };
 
+ 
   const countBy = (key: keyof Ticket) => {
     const map: Record<string, number> = {};
     tickets.forEach(t => {
@@ -84,18 +91,24 @@ const AdminTicketAnalytics = () => {
   const total = tickets.length;
   const internal = tickets.filter(t => t.issue_origin === "internal").length;
   const external = tickets.filter(t => t.issue_origin === "external").length;
-  
+
   const critical = tickets.filter(t => t.priority === "CRITICAL").length;
   const high = tickets.filter(t => t.priority === "HIGH").length;
   const medium = tickets.filter(t => t.priority === "MEDIUM").length;
   const low = tickets.filter(t => t.priority === "LOW").length;
 
+ 
+  const priorityData = PRIORITIES.map(p => ({
+    name: p,
+    value: tickets.filter(t => t.priority === p).length,
+  }));
 
+ 
   return (
     <div className="p-10 space-y-8">
       <h1 className="text-2xl font-semibold">Ticket Analytics</h1>
 
-
+      
       <div className="grid grid-cols-6 gap-4">
         <Stat label="Total Tickets" value={total} />
         <Stat label="Internal" value={internal} />
@@ -106,9 +119,9 @@ const AdminTicketAnalytics = () => {
         <Stat label="Low" value={low} />
       </div>
 
-   
+     
       <div className="grid grid-cols-3 gap-6">
-      
+       
         <Chart title="By Status">
           <PieChart>
             <Pie
@@ -125,17 +138,24 @@ const AdminTicketAnalytics = () => {
           </PieChart>
         </Chart>
 
-       
+      
         <Chart title="By Priority">
-          <BarChart data={countBy("priority")}>
+          <BarChart data={priorityData} margin={{ left: 10, right: 10 }}>
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="value" fill="#2563eb" />
+            <Bar dataKey="value">
+              {priorityData.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={PRIORITY_COLORS[entry.name]}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </Chart>
 
-        
+       
         <Chart title="Internal vs External">
           <BarChart data={countBy("issue_origin")}>
             <XAxis dataKey="name" />
@@ -167,4 +187,3 @@ const Chart = ({ title, children }: any) => (
 );
 
 export default AdminTicketAnalytics;
-
