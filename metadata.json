@@ -1,0 +1,7 @@
+{
+  "name": "NestResolve",
+  "description": "A dynamic, configuration-driven Jira-like ticket management system with flexible metadata and auto-routing for various enterprise issue types.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
