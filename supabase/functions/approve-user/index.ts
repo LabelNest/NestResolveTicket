@@ -94,6 +94,7 @@ serve(async (req) => {
 
     const jwt = authHeader.replace("Bearer ", "");
 
+  
     const { email, signupRequestId, reject } = await req.json();
 
     if (!email || !signupRequestId) {
@@ -122,7 +123,7 @@ serve(async (req) => {
 
     const adminEmail = adminUser.email;
 
-  
+    
     if (reject) {
       await supabaseAdmin
         .from("nr_signup_requests")
@@ -146,10 +147,7 @@ serve(async (req) => {
           },
           {
             onConflict: "admin_email",
-            increment: {
-              rejected: 1,
-              total: 1,
-            },
+            increment: { rejected: 1, total: 1 },
           }
         );
 
@@ -166,20 +164,52 @@ serve(async (req) => {
     }
 
     
+    const { data: inviteData, error: inviteError } =
+      await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
-    await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    if (inviteError || !inviteData?.user) {
+      throw inviteError || new Error("Invite failed");
+    }
 
+    const authUserId = inviteData.user.id;
+
+    
+    const isInternal = email.endsWith("@labelnest.in");
+    const tenantCode = isInternal ? "LNI" : "GUEST";
+
+    const { data: tenant, error: tenantError } = await supabaseAdmin
+      .from("tenants")
+      .select("id")
+      .eq("code", tenantCode)
+      .single();
+
+    if (tenantError || !tenant) {
+      throw new Error(`Tenant not found for code ${tenantCode}`);
+    }
+
+    
     await supabaseAdmin
       .from("nr_signup_requests")
       .update({ nr_status: "APPROVED" })
       .eq("nr_id", signupRequestId);
 
+    
+    await supabaseAdmin.from("nr_users").insert({
+      nr_auth_user_id: authUserId,
+      nr_email: email,
+      nr_name: email.split("@")[0],
+      nr_role: "user",
+      tenant_id: tenant.id,
+    });
+
+    
     await supabaseAdmin.from("nr_signup_audit").insert({
       signup_request_id: signupRequestId,
       action: "APPROVED",
       acted_by: adminEmail,
     });
 
+   
     await supabaseAdmin
       .from("nr_admin_approval_stats")
       .upsert(
@@ -191,13 +221,11 @@ serve(async (req) => {
         },
         {
           onConflict: "admin_email",
-          increment: {
-            approved: 1,
-            total: 1,
-          },
+          increment: { approved: 1, total: 1 },
         }
       );
 
+  
     await sendBrevoEmail(
       email,
       "🎉 Account Approved – LabelNest",
