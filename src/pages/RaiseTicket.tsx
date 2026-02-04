@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 
 const categories = [
   "Feature Request",
@@ -16,8 +16,6 @@ const categories = [
   "Others",
 ];
 
-const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000000";
-
 const RaiseTicket = () => {
   const navigate = useNavigate();
 
@@ -26,19 +24,35 @@ const RaiseTicket = () => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+     
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
+      
+      const isInternal = email.toLowerCase().endsWith("@labelnest.in");
+      const tenantCode = isInternal ? "LNI" : "GUEST";
+
+      const { data: tenant, error: tenantError } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("code", tenantCode)
+        .single();
+
+      if (tenantError || !tenant) {
+        throw new Error("Tenant not configured");
+      }
+
+      
       const { error } = await supabase.from("nr_resolve_tickets").insert({
-        tenant_id: DEFAULT_TENANT_ID,
-        issue_origin: "external",
+        tenant_id: tenant.id,
+        issue_origin: isInternal ? "internal" : "external",
         title: category,
         description,
         type: category,
@@ -50,7 +64,8 @@ const RaiseTicket = () => {
 
       
       toast.success("Ticket submitted successfully", {
-        description: "Our team will contact you if needed.For better tracking, please login.",
+        description:
+          "Our team will contact you if needed. For better tracking, please login.",
         duration: 9000,
       });
 
@@ -58,7 +73,6 @@ const RaiseTicket = () => {
       setEmail("");
       setDescription("");
 
-      
       setTimeout(() => navigate("/"), 1500);
     } catch (err: any) {
       toast.error("Failed to submit ticket", {
@@ -69,28 +83,17 @@ const RaiseTicket = () => {
     }
   };
 
- 
+  
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
-      <div
-        className="
-          glass-card p-8 w-full max-w-md
-          animate-slide-up
-          transition-all
-        "
-      >
-      
+      <div className="glass-card p-8 w-full max-w-md animate-slide-up transition-all">
+       
         <button
           onClick={() => navigate("/")}
-          className="
-            absolute top-4 left-4
-            w-9 h-9
-            rounded-full
-            bg-white/5 hover:bg-white/10
-            text-gray-300 hover:text-white
-            flex items-center justify-center
-            transition
-          "
+          className="absolute top-4 left-4 w-9 h-9 rounded-full
+                     bg-white/5 hover:bg-white/10
+                     text-gray-300 hover:text-white
+                     flex items-center justify-center transition"
         >
           <ArrowLeft size={18} />
         </button>
@@ -131,14 +134,12 @@ const RaiseTicket = () => {
 
           <Button
             disabled={loading}
-            className="
-              w-full rounded-xl
-              bg-gradient-to-r from-red-600 to-orange-600
-              text-white font-medium
-              transition-all
-              hover:scale-[1.03]
-              disabled:opacity-60
-            "
+            className="w-full rounded-xl
+                       bg-gradient-to-r from-red-600 to-orange-600
+                       text-white font-medium
+                       transition-all
+                       hover:scale-[1.03]
+                       disabled:opacity-60"
           >
             {loading ? "Submitting..." : "Submit Ticket"}
           </Button>
@@ -154,8 +155,3 @@ const RaiseTicket = () => {
 };
 
 export default RaiseTicket;
-
-
-
-
- 
