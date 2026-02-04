@@ -4,14 +4,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-
 
 type SignupRequest = {
   nr_id: string;
@@ -21,24 +13,31 @@ type SignupRequest = {
   nr_status: string;
 };
 
+type Tenant = {
+  id: string;
+  name: string;
+};
+
 
 const APPROVE_FUNCTION_URL =
   "https://evugaodpzepyjonlrptn.supabase.co/functions/v1/approve-user";
 
-const COLORS = ["#2563eb", "#16a34a", "#dc2626"];
-
 
 const AdminApprovals = () => {
   const navigate = useNavigate();
+
   const [requests, setRequests] = useState<SignupRequest[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     role: "user",
+    tenant_id: "",
   });
 
-  
+
   useEffect(() => {
     init();
   }, []);
@@ -54,16 +53,16 @@ const AdminApprovals = () => {
       .maybeSingle();
 
     if (!admin) {
-      // alert("Access denied");
       toast.error("Access denied");
       navigate("/");
       return;
     }
 
     loadRequests();
+    loadTenants();
   };
 
-  
+
   const loadRequests = async () => {
     const { data } = await supabase
       .from("nr_signup_requests")
@@ -71,6 +70,37 @@ const AdminApprovals = () => {
       .order("nr_created_at", { ascending: false });
 
     setRequests(data || []);
+  };
+
+  const loadTenants = async () => {
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("id, name")
+      .eq("status", "active");
+
+    if (error) {
+      toast.error("Failed to load tenants");
+      return;
+    }
+
+    setTenants(data || []);
+  };
+
+ 
+  const handleEmailChange = (email: string) => {
+    const isInternal = email.endsWith("@labelnest.in");
+
+    const matchedTenant = tenants.find(t =>
+      isInternal
+        ? t.name.toLowerCase().includes("labelnest")
+        : t.name.toLowerCase().includes("guest")
+    );
+
+    setNewUser(prev => ({
+      ...prev,
+      email,
+      tenant_id: matchedTenant?.id || "",
+    }));
   };
 
  
@@ -92,32 +122,36 @@ const AdminApprovals = () => {
 
     const result = await res.json();
     if (!res.ok) {
-      // alert(result.error || "Approval failed");
       toast.error(result.error || "Approval failed");
       return;
     }
 
-    // alert("Approved & email sent");
     toast.success("Approved & email sent");
     loadRequests();
   };
 
-  
+ 
   const reject = async (id: string) => {
     await supabase
       .from("nr_signup_requests")
       .update({ nr_status: "REJECTED" })
       .eq("nr_id", id);
 
+    toast.info("Request rejected");
     loadRequests();
   };
 
   
   const createUser = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return;
+    if (!newUser.name || !newUser.email || !newUser.tenant_id) {
+      toast.warning("Please fill all fields");
+      return;
+    }
 
-    
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) return;
+
+ 
     const { data: request, error } = await supabase
       .from("nr_signup_requests")
       .insert({
@@ -130,7 +164,6 @@ const AdminApprovals = () => {
       .single();
 
     if (error) {
-      // alert("Failed to create signup request");
       toast.error("Failed to create signup request");
       return;
     }
@@ -139,30 +172,29 @@ const AdminApprovals = () => {
     const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
+        Authorization: `Bearer ${session.session.access_token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         email: request.nr_email,
         signupRequestId: request.nr_id,
+        tenant_id: newUser.tenant_id,
       }),
     });
 
     const result = await res.json();
     if (!res.ok) {
-      // alert(result.error || "User approval failed");
       toast.error(result.error || "User approval failed");
       return;
     }
 
-    // alert("User created & approved");
     toast.success("User created & approved");
     setShowAdd(false);
-    setNewUser({ name: "", email: "", role: "user" });
+    setNewUser({ name: "", email: "", role: "user", tenant_id: "" });
     loadRequests();
   };
 
-  
+ 
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.nr_status === "PENDING").length,
@@ -170,50 +202,25 @@ const AdminApprovals = () => {
     rejected: requests.filter(r => r.nr_status === "REJECTED").length,
   };
 
-  const chartData = [
-    { name: "Pending", value: stats.pending },
-    { name: "Approved", value: stats.approved },
-    { name: "Rejected", value: stats.rejected },
-  ];
-
   const pendingRequests = requests.filter(
     r => r.nr_status === "PENDING"
   );
 
-  
+ 
   return (
     <div className="p-10 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">
-          Signup Approvals
-        </h1>
-        <Button onClick={() => setShowAdd(true)}>
-          Add New User
-        </Button>
+        <h1 className="text-2xl font-semibold">Signup Approvals</h1>
+        <Button onClick={() => setShowAdd(true)}>Add New User</Button>
       </div>
 
-      {/* STATS */}
+      
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total" value={stats.total} />
         <Stat label="Pending" value={stats.pending} />
         <Stat label="Approved" value={stats.approved} />
         <Stat label="Rejected" value={stats.rejected} />
       </div>
-
-      
-      {/* <div className="border rounded p-4">
-        <p className="mb-2 font-medium">Signup Status</p>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie data={chartData} dataKey="value" outerRadius={90}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div> */}
 
       
       {pendingRequests.map(r => (
@@ -234,7 +241,7 @@ const AdminApprovals = () => {
         </div>
       ))}
 
-      
+   
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white text-black p-6 w-96 space-y-3 rounded">
@@ -253,10 +260,24 @@ const AdminApprovals = () => {
               className="border p-2 w-full"
               placeholder="Email"
               value={newUser.email}
-              onChange={e =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
+              onChange={e => handleEmailChange(e.target.value)}
             />
+
+      
+            <select
+              className="border p-2 w-full"
+              value={newUser.tenant_id}
+              onChange={e =>
+                setNewUser({ ...newUser, tenant_id: e.target.value })
+              }
+            >
+              <option value="">Select Tenant</option>
+              {tenants.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
 
             <select
               className="border p-2 w-full"
@@ -270,8 +291,11 @@ const AdminApprovals = () => {
             </select>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowAdd(false)}
-                className="bg-gray-200 text-black hover:bg-gray-300">
+              <Button
+                variant="outline"
+                onClick={() => setShowAdd(false)}
+                className="bg-gray-200 text-black hover:bg-gray-300"
+              >
                 Cancel
               </Button>
               <Button onClick={createUser}>Create</Button>
@@ -292,5 +316,3 @@ const Stat = ({ label, value }: { label: string; value: number }) => (
 );
 
 export default AdminApprovals;
-
-
