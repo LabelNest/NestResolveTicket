@@ -2,16 +2,17 @@ import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-
 
 const LoginCard = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   /* ================= LOGIN ================= */
   const handleLogin = async (e: React.FormEvent) => {
@@ -26,7 +27,6 @@ const LoginCard = () => {
       });
 
       if (error || !data.user) {
-        // alert(error?.message ?? "Invalid credentials");
         toast.error(error?.message ?? "Invalid credentials");
         return;
       }
@@ -42,15 +42,12 @@ const LoginCard = () => {
 
       if (adminError) {
         console.error(adminError);
-        // alert("Admin check failed");
         toast.error("Admin check failed");
         return;
       }
 
       if (admin) {
-        // window.location.href = "/admin/approvals";
-        window.location.href = "/admin";
-
+        navigate("/admin"); // ✅ ADMIN LANDING
         return;
       }
 
@@ -63,36 +60,32 @@ const LoginCard = () => {
 
       if (userCheckError) {
         console.error(userCheckError);
-        // alert("User lookup failed");
         toast.error("User lookup failed");
         return;
       }
 
       if (!existingUser) {
-        const { error: insertError } = await supabase
-          .from("nr_users")
-          .insert({
-            nr_auth_user_id: authUser.id,
-            nr_email: authUser.email,
-            nr_name:
-              authUser.user_metadata?.full_name ??
-              authUser.email ??
-              "User",
-            nr_role: "user",
-            nr_status: "active",
-            nr_tenant_id: null, // IMPORTANT: must be nullable in DB
-          });
+        const { error: insertError } = await supabase.from("nr_users").insert({
+          nr_auth_user_id: authUser.id,
+          nr_email: authUser.email,
+          nr_name:
+            authUser.user_metadata?.full_name ??
+            authUser.email ??
+            "User",
+          nr_role: "user",
+          nr_status: "active",
+          nr_tenant_id: null,
+        });
 
         if (insertError) {
           console.error(insertError);
-          // alert("Failed to create user profile");
           toast.error("Failed to create user profile");
           return;
         }
       }
 
-      /* 4️⃣ REDIRECT USER */
-      window.location.href = "/dashboard";
+      /* 4️⃣ USER LANDING PAGE */
+      navigate("/resolve"); // ✅ FIXED (NO MORE NOT FOUND)
     } finally {
       setLoading(false);
     }
@@ -101,20 +94,17 @@ const LoginCard = () => {
   /* ================= FORGOT PASSWORD ================= */
   const handleForgotPassword = async () => {
     if (!email) {
-      // alert("Please enter your email first");
       toast.warning("Please enter your email first");
       return;
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:8080/reset-password",
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
-      // alert(error.message);
       toast.error(error.message);
     } else {
-      // alert("Password reset email sent. Check your inbox.");
       toast.success("Password reset email sent. Check your inbox.");
     }
   };
@@ -200,5 +190,3 @@ const LoginCard = () => {
 };
 
 export default LoginCard;
-
-
