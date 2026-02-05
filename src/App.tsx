@@ -25,7 +25,8 @@ import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
 import AdminTenants from "./pages/AdminTenants";
 
-import ResolveApp from "./RaiseTicket/ResolveApp";
+import ResolveApp from "./RaiseTicket/app";
+
 
 
 
@@ -77,6 +78,7 @@ const App = () => {
 
 
 
+
             
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -87,5 +89,6 @@ const App = () => {
 };
 
 export default App;
+
 
 
