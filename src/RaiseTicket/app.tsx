@@ -9,7 +9,8 @@ import {
   TicketMetadata,
   Attachment,
   FormField
-} from '../types';
+} from './types';   // ✅ FIXED HERE
+
 import { TICKET_TYPES, STATUS_LABELS, PRIORITY_COLORS } from './constants';
 import {
   Plus,
@@ -31,6 +32,7 @@ import {
   Inbox
 } from 'lucide-react';
 import TicketList from './ticketlist';
+
 
 
 // --- Types for internal state ---
