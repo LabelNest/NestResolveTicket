@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { TicketTypeConfig, TicketStatus, Priority } from '../types';
+import { TicketTypeConfig, TicketStatus, Priority } from './types';
+
 
 export const TICKET_TYPES: TicketTypeConfig[] = [
   {
