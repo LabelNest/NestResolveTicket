@@ -1,12 +1,10 @@
-
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
-
 
 const LoginCard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,27 +12,28 @@ const LoginCard = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
+  const navigate = useNavigate();
+
+  /* ================= LOGIN ================= */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      
+      /* 1️⃣ AUTH LOGIN */
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error || !data.user) {
-        // alert(error?.message ?? "Invalid credentials");
         toast.error(error?.message ?? "Invalid credentials");
         return;
       }
 
       const authUser = data.user;
 
-      
+      /* 2️⃣ ADMIN CHECK */
       const { data: admin, error: adminError } = await supabase
         .from("nr_admins")
         .select("nr_id")
@@ -43,19 +42,16 @@ const LoginCard = () => {
 
       if (adminError) {
         console.error(adminError);
-        // alert("Admin check failed");
         toast.error("Admin check failed");
         return;
       }
 
       if (admin) {
-        // window.location.href = "/admin/approvals";
-        window.location.href = "/admin";
-
+        navigate("/admin");
         return;
       }
 
-     
+      /* 3️⃣ ENSURE USER PROFILE EXISTS */
       const { data: existingUser, error: userCheckError } = await supabase
         .from("nr_users")
         .select("nr_id")
@@ -64,7 +60,6 @@ const LoginCard = () => {
 
       if (userCheckError) {
         console.error(userCheckError);
-        // alert("User lookup failed");
         toast.error("User lookup failed");
         return;
       }
@@ -86,41 +81,37 @@ const LoginCard = () => {
 
         if (insertError) {
           console.error(insertError);
-          // alert("Failed to create user profile");
           toast.error("Failed to create user profile");
           return;
         }
       }
 
-      
-      window.location.href = "/resolve";
+      /* 4️⃣ REDIRECT USER TO RESOLVE */
+      navigate("/resolve");
     } finally {
       setLoading(false);
     }
   };
 
-  
+  /* ================= FORGOT PASSWORD ================= */
   const handleForgotPassword = async () => {
     if (!email) {
-      // alert("Please enter your email first");
       toast.warning("Please enter your email first");
       return;
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://localhost:8080/reset-password",
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
-      // alert(error.message);
       toast.error(error.message);
     } else {
-      // alert("Password reset email sent. Check your inbox.");
       toast.success("Password reset email sent. Check your inbox.");
     }
   };
 
-  
+  /* ================= UI ================= */
   return (
     <div className="glass-card p-8 sm:p-10 w-full max-w-md animate-slide-up">
       <div className="text-center mb-8">
@@ -133,7 +124,7 @@ const LoginCard = () => {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-5">
-        
+        {/* Email */}
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Email Address
@@ -150,7 +141,7 @@ const LoginCard = () => {
           </div>
         </div>
 
-        
+        {/* Password */}
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Master Credential
@@ -201,7 +192,3 @@ const LoginCard = () => {
 };
 
 export default LoginCard;
-
-
-
-
