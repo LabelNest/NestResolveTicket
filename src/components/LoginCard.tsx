@@ -93,7 +93,7 @@ const LoginCard = () => {
       }
 
       
-      window.location.href = "/dashboard";
+      window.location.href = "/resolve";
     } finally {
       setLoading(false);
     }
@@ -201,6 +201,7 @@ const LoginCard = () => {
 };
 
 export default LoginCard;
+
 
 
 
