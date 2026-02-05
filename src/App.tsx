@@ -25,6 +25,9 @@ import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
 import AdminTenants from "./pages/AdminTenants";
 
+import ResolveApp from "./RaiseTicket/app";
+
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -67,6 +70,8 @@ const App = () => {
               <Route path="audit" element={<AdminAudit />} />
               <Route path="admin-tenants" element={<AdminTenants />} />
             </Route>
+            <Route path="/resolve" element={<ResolveApp />} />
+
 
             
             <Route path="*" element={<NotFound />} />
@@ -78,3 +83,4 @@ const App = () => {
 };
 
 export default App;
+
