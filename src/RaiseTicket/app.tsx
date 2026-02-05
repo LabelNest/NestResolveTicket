@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase } from "@/lib/supabaseClient";
+
 import {
   Ticket,
   TicketStatus,
