@@ -75,6 +75,7 @@ const App = () => {
             <Route path="/resolve" element={<ResolveApp />} />
 
             <Route path="/resolve" element={<ResolveApp />} />
+             
 
 
 
@@ -89,6 +90,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
