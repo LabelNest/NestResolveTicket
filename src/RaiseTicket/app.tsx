@@ -32,7 +32,7 @@ import {
   List,
   Inbox
 } from 'lucide-react';
-import TicketList from './ticketlist';
+import TicketList from './RaiseTicket/ticketlist';
 
 
 
@@ -54,28 +54,25 @@ const App: React.FC = () => {
 
 
   // Fetch tickets from Supabase on component mount
-  useEffect(() => {
+useEffect(() => {
   const fetchTickets = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    if (error || !user) {
-      console.error('User not logged in');
+    const tenantId = user.user_metadata?.tenant_id;
+    if (!tenantId) {
+      console.error("tenant_id missing in user metadata");
       return;
     }
 
-    setAuthUser(user); // ✅ STORE USER
+    const { data, error } = await supabase
+      .from("nr_resolve_tickets")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false });
 
-    const { data, error: ticketError } = await supabase
-      .from('nr_resolve_tickets')
-      .select('*')
-      .eq('tenant_id', user.id) // ✅ FIXED
-      .order('created_at', { ascending: false });
-
-    if (ticketError) {
-      console.error('Error loading tickets:', ticketError);
+    if (error) {
+      console.error("Error loading tickets:", error);
       return;
     }
 
@@ -84,6 +81,7 @@ const App: React.FC = () => {
 
   fetchTickets();
 }, []);
+
 
 
   // --- Logic ---
@@ -101,6 +99,24 @@ const App: React.FC = () => {
 const handleCreateTicket = async (formData: Record<string, any>) => {
   if (!authUser) {
     alert('You must be logged in to create a ticket');
+    return;
+  }
+    // STEP 1: Get logged-in user
+    const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.error("User not authenticated", userError);
+    return;
+  }
+
+  // STEP 2: Get tenant_id from JWT metadata
+  const tenantId = user.user_metadata?.tenant_id;
+
+  if (!tenantId) {
+    console.error("tenant_id missing in user metadata");
     return;
   }
 
