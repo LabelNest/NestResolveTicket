@@ -32,7 +32,7 @@ import {
   List,
   Inbox
 } from 'lucide-react';
-import TicketList from './RaiseTicket/ticketlist';
+import TicketList from './ticketlist';
 
 
 
