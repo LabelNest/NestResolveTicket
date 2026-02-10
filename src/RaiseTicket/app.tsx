@@ -10,7 +10,7 @@ import {
   TicketMetadata,
   Attachment,
   FormField
-} from './types';   // ✅ FIXED HERE
+} from './types';   
 
 import { TICKET_TYPES, STATUS_LABELS, PRIORITY_COLORS } from './constants';
 import {
