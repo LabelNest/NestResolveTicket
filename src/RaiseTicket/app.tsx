@@ -69,6 +69,18 @@ const App: React.FC = () => {
     setModalState('selector');
   };
 
+  //code to fetch the tenant id
+  const {
+  data: { user },
+  error: userError,
+} = await supabase.auth.getUser();
+
+if (userError || !user) {
+  console.error("User not authenticated");
+  return;
+}
+
+
   const handleSelectType = (type: TicketTypeConfig) => {
     setSelectedType(type);
     setModalState('form');
@@ -87,8 +99,8 @@ const App: React.FC = () => {
       dataset: formData,
       issue_origin: 'internal',
       source_module: 'ticketing',
-      tenant_id: "00000000-0000-0000-0000-000000000000",
-      created_by: "00000000-0000-0000-0000-000000000000"
+      tenant_id: user.id,
+      created_by: user.id,
     };
 
     const { data, error } = await supabase
