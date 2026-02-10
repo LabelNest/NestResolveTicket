@@ -52,33 +52,42 @@ const App: React.FC = () => {
 
   // Fetch tickets from Supabase on component mount
   useEffect(() => {
-    const fetchTickets = async () => {
-      const { data, error } = await supabase
-        .from('nr_resolve_tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const fetchTickets = async () => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      if (data) setTickets(data);
-      if (error) console.error('Error loading tickets:', error);
-    };
-    fetchTickets();
-  }, []);
+    if (userError || !user) {
+      console.error('User not logged in');
+      return;
+    }
+
+    const tenantId = user.user_metadata?.tenant_id;
+
+    const { data, error } = await supabase
+      .from('nr_resolve_tickets')
+      .select('*')
+      .eq('tenant_id', tenantId) // 🔥 THIS IS THE KEY
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading tickets:', error);
+      return;
+    }
+
+    setTickets(data ?? []);
+  };
+
+  fetchTickets();
+}, []);
+
 
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
     setModalState('selector');
   };
 
-  //code to fetch the tenant id
-  const {
-  data: { user },
-  error: userError,
-} = await supabase.auth.getUser();
-
-if (userError || !user) {
-  console.error("User not authenticated");
-  return;
-}
 
 
   const handleSelectType = (type: TicketTypeConfig) => {
