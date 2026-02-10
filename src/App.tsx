@@ -24,6 +24,7 @@ import AdminSignupAnalytics from "./pages/AdminSignupAnalytics";
 import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
 import AdminTenants from "./pages/AdminTenants";
+import AdminUsers from "./pages/AdminUsers";
 
 import ResolveApp from "@/RaiseTicket/app";
 
@@ -71,6 +72,7 @@ const App = () => {
               <Route path="tickets" element={<AdminTickets />} />
               <Route path="audit" element={<AdminAudit />} />
               <Route path="admin-tenants" element={<AdminTenants />} />
+              <Route path="admin-users" element={<AdminUsers />} />
             </Route>
             <Route path="/resolve" element={<ResolveApp />} />
 
@@ -90,6 +92,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
