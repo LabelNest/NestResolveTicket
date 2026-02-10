@@ -28,7 +28,6 @@ import AdminTenants from "./pages/AdminTenants";
 import ResolveApp from "./RaiseTicket/app";
 
 
-console.log("AUTH UID:", authData.user?.id);
 
 
 
@@ -92,6 +91,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
