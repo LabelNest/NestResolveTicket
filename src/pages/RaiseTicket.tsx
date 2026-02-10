@@ -20,17 +20,18 @@ const RaiseTicket = () => {
   const navigate = useNavigate();
 
   const [category, setCategory] = useState("");
+  const [name, setName] = useState("");        
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-     
+      
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -40,7 +41,7 @@ const RaiseTicket = () => {
       const tenantCode = isInternal ? "LNI" : "GUEST";
 
       const { data: tenant, error: tenantError } = await supabase
-        .from("tenants")
+        .from("lni_tenants")
         .select("id")
         .eq("code", tenantCode)
         .single();
@@ -49,16 +50,22 @@ const RaiseTicket = () => {
         throw new Error("Tenant not configured");
       }
 
-      
-      const { error } = await supabase.from("nr_resolve_tickets").insert({
-        tenant_id: tenant.id,
-        issue_origin: isInternal ? "internal" : "external",
-        title: category,
-        description,
-        type: category,
-        created_by: user?.id ?? null,
-        source_module: email,
-      });
+     
+      const { error } = await supabase
+        .from("nr_resolve_tickets")
+        .insert({
+          tenant_id: tenant.id,
+          issue_origin: isInternal ? "internal" : "external",
+          title: category,
+          description,
+          type: category,
+
+          created_by: user?.id ?? null,     
+          created_by_name: name,             
+          created_by_email: email,           
+
+          source_module: "raise_ticket_form",
+        });
 
       if (error) throw error;
 
@@ -70,6 +77,7 @@ const RaiseTicket = () => {
       });
 
       setCategory("");
+      setName("");
       setEmail("");
       setDescription("");
 
@@ -103,6 +111,7 @@ const RaiseTicket = () => {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -117,6 +126,15 @@ const RaiseTicket = () => {
             ))}
           </select>
 
+          
+          <Input
+            placeholder="Your full name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          
           <Input
             type="email"
             placeholder="Your email address"
@@ -125,6 +143,7 @@ const RaiseTicket = () => {
             required
           />
 
+          
           <Input
             placeholder="Describe your request"
             value={description}
@@ -155,3 +174,4 @@ const RaiseTicket = () => {
 };
 
 export default RaiseTicket;
+
