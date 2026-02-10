@@ -97,10 +97,6 @@ useEffect(() => {
   };
 
 const handleCreateTicket = async (formData: Record<string, any>) => {
-  if (!authUser) {
-    alert('You must be logged in to create a ticket');
-    return;
-  }
     // STEP 1: Get logged-in user
     const {
     data: { user },
