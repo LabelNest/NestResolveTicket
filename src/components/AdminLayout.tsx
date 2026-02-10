@@ -1,4 +1,3 @@
-
 import { Building, Building2, User2 } from "lucide-react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
@@ -82,7 +81,7 @@ const AdminLayout = () => {
 
         </nav>
 
-       
+        
         <div className="p-4 border-t border-white/10">
           <button
             onClick={logout}
@@ -123,7 +122,7 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {
+      
       <main className="flex-1 p-6 overflow-auto">
         <Outlet />
       </main>
