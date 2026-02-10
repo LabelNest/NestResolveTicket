@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from "@/lib/supabaseClient";
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 import {
   Ticket,
@@ -49,30 +50,32 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
+  const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
+
 
   // Fetch tickets from Supabase on component mount
   useEffect(() => {
   const fetchTickets = async () => {
     const {
       data: { user },
-      error: userError,
+      error,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    if (error || !user) {
       console.error('User not logged in');
       return;
     }
 
-    const tenantId = user.user_metadata?.tenant_id;
+    setAuthUser(user); // ✅ STORE USER
 
-    const { data, error } = await supabase
+    const { data, error: ticketError } = await supabase
       .from('nr_resolve_tickets')
       .select('*')
-      .eq('tenant_id', tenantId) // 🔥 THIS IS THE KEY
+      .eq('tenant_id', user.id) // ✅ FIXED
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error loading tickets:', error);
+    if (ticketError) {
+      console.error('Error loading tickets:', ticketError);
       return;
     }
 
@@ -95,44 +98,44 @@ const App: React.FC = () => {
     setModalState('form');
   };
 
-  const handleCreateTicket = async (formData: Record<string, any>) => {
-    // Mapping form data to your Supabase columns
-    const newTicketData = {
-      title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || 'New Request'}`,
-      description: formData.description || '',
-      type: selectedType!.ticket_type,
-      priority: formData.urgency || formData.severity || 'MEDIUM',
-      // 'status' MUST be 'TODO' to appear in the first column of the board
-      status: 'TO DO',
-      department: selectedType!.default_team,
-      dataset: formData,
-      issue_origin: 'internal',
-      source_module: 'ticketing',
-      tenant_id: user.id,
-      created_by: user.id,
-    };
+const handleCreateTicket = async (formData: Record<string, any>) => {
+  if (!authUser) {
+    alert('You must be logged in to create a ticket');
+    return;
+  }
 
-    const { data, error } = await supabase
-      .from('nr_resolve_tickets')
-      .insert([newTicketData])
-      .select(); // This retrieves the created row back from Supabase
-
-    if (error) {
-      console.error("Supabase Error:", error);
-      alert(`Failed to save: ${error.message}`);
-      return;
-    }
-
-    // --- Update UI State ---
-    if (data && data.length > 0) {
-      // Adding the new ticket to state triggers a re-render of the Kanban columns
-      setTickets(prevTickets => [data[0], ...prevTickets]);
-
-      // Close the modal to show the board
-      setModalState('closed');
-      setSelectedType(null);
-    }
+  const newTicketData = {
+    title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || 'New Request'}`,
+    description: formData.description || '',
+    type: selectedType!.ticket_type,
+    priority: formData.urgency || formData.severity || 'MEDIUM',
+    status: 'TO DO',
+    department: selectedType!.default_team,
+    dataset: formData,
+    issue_origin: 'internal',
+    source_module: 'ticketing',
+    tenant_id: authUser.id,   // ✅ FIXED
+    created_by: authUser.id,  // ✅ FIXED
   };
+
+  const { data, error } = await supabase
+    .from('nr_resolve_tickets')
+    .insert([newTicketData])
+    .select();
+
+  if (error) {
+    console.error('Supabase Error:', error);
+    alert(`Failed to save: ${error.message}`);
+    return;
+  }
+
+  if (data?.length) {
+    setTickets(prev => [data[0], ...prev]);
+    setModalState('closed');
+    setSelectedType(null);
+  }
+};
+
 
   const filteredTickets = useMemo(() => {
     return tickets.filter(t =>
