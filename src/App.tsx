@@ -25,7 +25,7 @@ import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
 import AdminTenants from "./pages/AdminTenants";
 
-import ResolveApp from "./raiseticket/App";
+import ResolveApp from "./RaiseTicket/app";
 
 
 
@@ -90,6 +90,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
