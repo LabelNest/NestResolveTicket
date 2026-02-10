@@ -42,12 +42,12 @@ const AdminAudit = () => {
     init();
   }, []);
 
-  
+ 
   const init = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return navigate("/");
 
-    
+   
     const { data: admin } = await supabase
       .from("nr_admins_list")
       .select("nr_email")
@@ -60,7 +60,7 @@ const AdminAudit = () => {
     setLoading(false);
   };
 
- 
+  
   const loadAuditData = async () => {
     const [
       authUsers,
@@ -94,7 +94,7 @@ const AdminAudit = () => {
     );
   }
 
-
+ 
   return (
     <div className="p-10 space-y-10">
       <h1 className="text-2xl font-semibold">
@@ -109,7 +109,7 @@ const AdminAudit = () => {
         <Metric label="Total Tickets" value={counts.tickets} />
       </div>
 
-     
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
        
         <div className="glass-card p-6 rounded-xl">
@@ -144,7 +144,7 @@ const AdminAudit = () => {
           </ResponsiveContainer>
         </div>
 
-       
+        
         <div className="glass-card p-6 rounded-xl">
           <h2 className="mb-4 font-medium">Admin Activity</h2>
           <ResponsiveContainer width="100%" height={260}>
@@ -216,4 +216,3 @@ const Metric = ({ label, value }: any) => (
 );
 
 export default AdminAudit;
-
