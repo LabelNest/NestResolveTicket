@@ -1,7 +1,8 @@
 import { Priority } from '../types';
 import { PRIORITY_COLORS } from './constants';
 import type { Ticket } from '../types';
-
+import { supabase } from "@/lib/supabaseClient";
+ 
 
 export default function TicketList({ tickets }: { tickets: Ticket[] }) {
     if (!tickets.length) {
@@ -84,3 +85,4 @@ export default function TicketList({ tickets }: { tickets: Ticket[] }) {
         </div>
     );
 }
+
