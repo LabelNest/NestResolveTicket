@@ -1,4 +1,5 @@
-import { Building2 } from "lucide-react";
+
+import { Building, Building2, User2 } from "lucide-react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -22,13 +23,13 @@ const AdminLayout = () => {
       
       <aside className="w-64 bg-[#1e3a8a] text-white flex flex-col">
 
-       
+        
         <div className="px-6 py-6 border-b border-white/10">
           <p className="text-xs tracking-widest text-white/60 mb-2">
             <b>ADMIN PANEL</b>
           </p>
 
-         
+          
           <div className="flex items-center gap-3">
             <img
               src="/labelnest-logo.jpg"
@@ -68,6 +69,11 @@ const AdminLayout = () => {
             icon={<Building2 size={18} />}
             label="Tenants"
           />
+            <SideItem
+            to="/admin/admin-users"
+            icon={<User2 size={18} />}
+            label="Users"
+          />
           <SideItem
             to="/admin/audit"
             icon={<ClipboardList size={18} />}
@@ -76,7 +82,7 @@ const AdminLayout = () => {
 
         </nav>
 
-        
+       
         <div className="p-4 border-t border-white/10">
           <button
             onClick={logout}
@@ -117,7 +123,7 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-     
+      {
       <main className="flex-1 p-6 overflow-auto">
         <Outlet />
       </main>
