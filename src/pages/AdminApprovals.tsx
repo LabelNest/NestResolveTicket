@@ -62,7 +62,7 @@ const AdminApprovals = () => {
     loadTenants();
   };
 
-
+ 
   const loadRequests = async () => {
     const { data } = await supabase
       .from("nr_signup_requests")
@@ -74,7 +74,7 @@ const AdminApprovals = () => {
 
   const loadTenants = async () => {
     const { data, error } = await supabase
-      .from("tenants")
+      .from("lni_tenants")
       .select("id, name")
       .eq("status", "active");
 
@@ -86,7 +86,7 @@ const AdminApprovals = () => {
     setTenants(data || []);
   };
 
- 
+
   const handleEmailChange = (email: string) => {
     const isInternal = email.endsWith("@labelnest.in");
 
@@ -103,7 +103,7 @@ const AdminApprovals = () => {
     }));
   };
 
- 
+
   const approve = async (req: SignupRequest) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
@@ -130,7 +130,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
- 
+
   const reject = async (id: string) => {
     await supabase
       .from("nr_signup_requests")
@@ -141,7 +141,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-  
+
   const createUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.tenant_id) {
       toast.warning("Please fill all fields");
@@ -151,7 +151,7 @@ const AdminApprovals = () => {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return;
 
- 
+    
     const { data: request, error } = await supabase
       .from("nr_signup_requests")
       .insert({
@@ -214,7 +214,6 @@ const AdminApprovals = () => {
         <Button onClick={() => setShowAdd(true)}>Add New User</Button>
       </div>
 
-      
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total" value={stats.total} />
         <Stat label="Pending" value={stats.pending} />
@@ -222,7 +221,7 @@ const AdminApprovals = () => {
         <Stat label="Rejected" value={stats.rejected} />
       </div>
 
-      
+
       {pendingRequests.map(r => (
         <div
           key={r.nr_id}
@@ -241,7 +240,7 @@ const AdminApprovals = () => {
         </div>
       ))}
 
-   
+      
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white text-black p-6 w-96 space-y-3 rounded">
@@ -263,7 +262,7 @@ const AdminApprovals = () => {
               onChange={e => handleEmailChange(e.target.value)}
             />
 
-      
+            
             <select
               className="border p-2 w-full"
               value={newUser.tenant_id}
