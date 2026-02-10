@@ -27,20 +27,15 @@ const AdminTenants = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     init();
   }, []);
 
-  const init = async () => {
-    
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      navigate("/");
-      return;
-    }
 
-  
+  const init = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return navigate("/");
+
     const { data: admin } = await supabase
       .from("nr_admins")
       .select("nr_email")
@@ -56,38 +51,46 @@ const AdminTenants = () => {
     loadTenants();
   };
 
-  
   const loadTenants = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("tenants")
-      .select(
-        `
-        id,
-        name,
-        code,
-        status,
-        created_at,
-        nr_users ( count )
-      `
-      );
+  
+    const { data: tenantsData, error: tenantError } = await supabase
+      .from("lni_tenants")
+      .select("id, name, code, status, created_at");
 
-    if (error) {
-      console.error(error);
+    if (tenantError) {
+      console.error(tenantError);
       toast.error("Failed to load tenants");
       setLoading(false);
       return;
     }
 
+
+    const { data: usersData, error: userError } = await supabase
+      .from("nr_users")
+      .select("tenant_id");
+
+    if (userError) {
+      console.error(userError);
+      toast.error("Failed to load tenant users");
+      setLoading(false);
+      return;
+    }
+
+    
+    const userCountMap: Record<string, number> = {};
+    usersData?.forEach((u) => {
+      if (!u.tenant_id) return;
+      userCountMap[u.tenant_id] =
+        (userCountMap[u.tenant_id] || 0) + 1;
+    });
+
+    
     const mapped: Tenant[] =
-      data?.map((t: any) => ({
-        id: t.id,
-        name: t.name,
-        code: t.code,
-        status: t.status,
-        created_at: t.created_at,
-        users_count: t.nr_users?.[0]?.count ?? 0,
+      tenantsData?.map((t) => ({
+        ...t,
+        users_count: userCountMap[t.id] || 0,
       })) || [];
 
     setTenants(mapped);
@@ -102,12 +105,11 @@ const AdminTenants = () => {
   const internalUsers =
     tenants.find(t => t.code === "LNI")?.users_count ?? 0;
 
-  
+ 
   return (
     <div className="p-10 space-y-8">
       <h1 className="text-2xl font-semibold">Tenants Overview</h1>
 
-    
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total Tenants" value={totalTenants} />
         <Stat label="Active Tenants" value={activeTenants} />
@@ -115,33 +117,31 @@ const AdminTenants = () => {
         <Stat label="Guest Users" value={guestUsers} />
       </div>
 
-     
       <div className="border rounded p-4">
         <p className="mb-2 font-medium">Users per Tenant</p>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={tenants}>
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip />
             <Bar dataKey="users_count" fill="#2563eb" />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/30">
             <tr>
-              <th className="text-left p-3">Tenant</th>
-              <th className="text-left p-3">Code</th>
-              <th className="text-left p-3">Users</th>
-              <th className="text-left p-3">Status</th>
-              <th className="text-left p-3">Created</th>
+              <th className="p-3 text-left">Tenant</th>
+              <th className="p-3 text-left">Code</th>
+              <th className="p-3 text-left">Users</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">Created</th>
             </tr>
           </thead>
           <tbody>
-            {tenants.map(t => (
+            {tenants.map((t) => (
               <tr key={t.id} className="border-t">
                 <td className="p-3 font-medium">{t.name}</td>
                 <td className="p-3">{t.code}</td>
@@ -176,4 +176,3 @@ const Stat = ({ label, value }: { label: string; value: number }) => (
 );
 
 export default AdminTenants;
-
