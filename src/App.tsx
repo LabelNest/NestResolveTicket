@@ -25,8 +25,7 @@ import AdminTickets from "./pages/AdminTickets";
 import AdminAudit from "./pages/AdminAudit";
 import AdminTenants from "./pages/AdminTenants";
 
-import ResolveApp from "./raiseticket/index";
-
+import ResolveApp from "./raiseticket/App";
 
 
 
