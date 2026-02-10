@@ -53,61 +53,6 @@ const App: React.FC = () => {
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
 
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { supabase } from "@/lib/supabaseClient";
-import { User as SupabaseUser } from '@supabase/supabase-js';
-
-import {
-  Ticket,
-  TicketStatus,
-  Priority,
-  TicketTypeConfig,
-  TicketMetadata,
-  Attachment,
-  FormField
-} from './types';   
-
-import { TICKET_TYPES, STATUS_LABELS, PRIORITY_COLORS } from './constants';
-import {
-  Plus,
-  Search,
-  Layout,
-  ClipboardList,
-  Settings,
-  User,
-  Filter,
-  ChevronRight,
-  X,
-  Paperclip,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  MoreHorizontal,
-  Kanban,
-  List,
-  Inbox
-} from 'lucide-react';
-import TicketList from './ticketlist';
-
-
-
-// --- Types for internal state ---
-type ModalState = 'closed' | 'selector' | 'form';
-
-const App: React.FC = () => {
-  // --- State ---
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [metadata, setMetadata] = useState<TicketMetadata[]>([]);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-
-  const [modalState, setModalState] = useState<ModalState>('closed');
-  const [selectedType, setSelectedType] = useState<TicketTypeConfig | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
-  const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
-
-
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const fetchTickets = async () => {
