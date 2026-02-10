@@ -28,8 +28,8 @@ import AdminTenants from "./pages/AdminTenants";
 import ResolveApp from "./RaiseTicket/app";
 
 
-console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL);
-console.log("SUPABASE KEY:", import.meta.env.VITE_SUPABASE_ANON_KEY ? "EXISTS" : "MISSING");
+console.log("AUTH UID:", authData.user?.id);
+
 
 
 const queryClient = new QueryClient();
@@ -92,6 +92,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
