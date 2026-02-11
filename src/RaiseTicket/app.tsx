@@ -50,41 +50,27 @@ const App: React.FC = () => {
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const loadTickets = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log("NO USER");
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      console.log('No session yet');
       return;
     }
 
-    console.log("AUTH USER:", user.id);
+    console.log('AUTH USER:', session.user.id);
 
     const { data, error } = await supabase
-      .from("nr_resolve_tickets")
-      .select(`
-        id,
-        field_name,
-        confidence_score,
-        created_by_name,
-        created_by_email,
-        priority,
-        status,
-        created_by,
-        assigned_to,
-        tenant_id
-      `)
-      .eq("created_by", user.id);
+      .from('nr_resolve_tickets')
+      .select('*');
 
-    console.log("SUPABASE DATA:", data);
-    console.log("SUPABASE ERROR:", error);
-
-    if (!error && data) {
-      setTickets(data);
-    }
+    console.log('DATA:', data);
+    console.log('ERROR:', error);
   };
 
   loadTickets();
 }, []);
-
 
 
   // --- Logic ---
