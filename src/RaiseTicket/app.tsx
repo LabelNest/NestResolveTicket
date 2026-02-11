@@ -49,16 +49,14 @@ const App: React.FC = () => {
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
-  const init = async () => {
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error("Auth error:", authError);
+  const loadTickets = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log("NO USER");
       return;
     }
+
+    console.log("AUTH USER:", user.id);
 
     const { data, error } = await supabase
       .from("nr_resolve_tickets")
@@ -66,22 +64,28 @@ useEffect(() => {
         id,
         field_name,
         confidence_score,
+        created_by_name,
+        created_by_email,
         priority,
-        status
+        status,
+        created_by,
+        assigned_to,
+        tenant_id
       `)
-      .eq("created_by", user.id)
-      .order("created_at", { ascending: false });
+      .eq("created_by", user.id);
 
-    if (error) {
-      console.error("Fetch error:", error);
-      return;
+    console.log("SUPABASE DATA:", data);
+    console.log("SUPABASE ERROR:", error);
+
+    if (!error && data) {
+      setTickets(data);
     }
-
-    setTickets(data as Ticket[]);
   };
 
-  init();
+  loadTickets();
 }, []);
+
+
 
 // to check data is coming or not
   const { data, error } = await supabase
