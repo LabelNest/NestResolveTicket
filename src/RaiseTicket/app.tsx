@@ -30,7 +30,6 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
   const [activeView, setActiveView] = useState<"board" | "settings">("board");
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
-  const [tickets, setTickets] = useState<any[]>([]);
 
 useEffect(() => {
   const init = async () => {
@@ -43,8 +42,6 @@ useEffect(() => {
       console.error("Auth error:", authError);
       return;
     }
-
-    setAuthUser(user);
 
     const { data, error } = await supabase
       .from("nr_resolve_tickets")
@@ -63,11 +60,12 @@ useEffect(() => {
       return;
     }
 
-    setTickets(data ?? []);
+    setTickets(data as Ticket[]);
   };
 
   init();
 }, []);
+
 
 
   const handleOpenRaiseTicket = () => setModalState("selector");
