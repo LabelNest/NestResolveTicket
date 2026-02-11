@@ -87,28 +87,6 @@ useEffect(() => {
 
 
 
-// to check data is coming or not
-  const { data, error } = await supabase
-  .from("nr_resolve_tickets")
-  .select(`
-    id,
-    field_name,
-    confidence_score,
-    created_by_name,
-    created_by_email,
-    priority,
-    status,
-    created_by,
-    assigned_to,
-    tenant_id
-  `)
-  .eq("created_by", user.id);
-
-console.log("SUPABASE DATA:", data);
-console.log("SUPABASE ERROR:", error);
-
-if (!error) setTickets(data ?? []);
-
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
     setModalState('selector');
