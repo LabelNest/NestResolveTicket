@@ -30,23 +30,45 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
   const [activeView, setActiveView] = useState<"board" | "settings">("board");
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
+  const [tickets, setTickets] = useState<any[]>([]);
 
-  useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setAuthUser(user);
-      if (!user) return;
-      const tenantId = user.user_metadata?.tenant_id;
-      if (!tenantId) return;
-      const { data, error } = await supabase
-        .from("nr_resolve_tickets")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
-      if (!error) setTickets(data ?? []);
-    };
-    init();
-  }, []);
+useEffect(() => {
+  const init = async () => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return;
+    }
+
+    setAuthUser(user);
+
+    const { data, error } = await supabase
+      .from("nr_resolve_tickets")
+      .select(`
+        id,
+        field_name,
+        confidence_score,
+        priority,
+        status
+      `)
+      .eq("created_by", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Fetch error:", error);
+      return;
+    }
+
+    setTickets(data ?? []);
+  };
+
+  init();
+}, []);
+
 
   const handleOpenRaiseTicket = () => setModalState("selector");
 
@@ -55,34 +77,51 @@ const App: React.FC = () => {
     setModalState("form");
   };
 
-  const handleCreateTicket = async (formData: Record<string, any>) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const tenantId = user.user_metadata?.tenant_id;
-    if (!tenantId) return;
-    const newTicketData = {
-      title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || "New Request"}`,
-      description: formData.description || "",
-      type: selectedType!.ticket_type,
-      priority: formData.urgency || formData.severity || "MEDIUM",
-      status: "TO DO",
-      department: selectedType!.default_team,
-      dataset: formData,
-      issue_origin: "internal",
-      source_module: "ticketing",
-      tenant_id: tenantId,
-      created_by: user.id
-    };
-    const { data, error } = await supabase
-      .from("nr_resolve_tickets")
-      .insert([newTicketData])
-      .select();
-    if (!error && data?.length) {
-      setTickets(prev => [data[0], ...prev]);
-      setModalState("closed");
-      setSelectedType(null);
-    }
+const handleCreateTicket = async (formData: Record<string, any>) => {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    console.error("User not authenticated");
+    return;
+  }
+
+  const newTicketData = {
+    title: `${selectedType!.label}: ${
+      formData.description?.substring(0, 30) || "New Request"
+    }`,
+    description: formData.description || "",
+    type: selectedType!.ticket_type,
+    priority: formData.urgency || formData.severity || "MEDIUM",
+    status: "TO DO",
+    department: selectedType!.default_team,
+    dataset: formData,
+    issue_origin: "internal",
+    source_module: "ticketing",
+
+    // ✅ THIS IS THE ONLY USER LINK NEEDED
+    created_by: user.id,
   };
+
+  const { data, error } = await supabase
+    .from("nr_resolve_tickets")
+    .insert([newTicketData])
+    .select();
+
+  if (error) {
+    console.error("Ticket insert failed:", error);
+    return;
+  }
+
+  if (data?.length) {
+    setTickets(prev => [data[0], ...prev]);
+    setModalState("closed");
+    setSelectedType(null);
+  }
+};
+
 
   const filteredTickets = useMemo(() => {
     return tickets.filter(t =>
