@@ -1,7 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { User as SupabaseUser } from '@supabase/supabase-js';
-
+import { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   Ticket,
   TicketStatus,
@@ -10,124 +9,77 @@ import {
   TicketMetadata,
   Attachment,
   FormField
-} from './types';   
-
-import { TICKET_TYPES, STATUS_LABELS, PRIORITY_COLORS } from './constants';
+} from "./types";
+import { TICKET_TYPES, STATUS_LABELS } from "./constants";
 import {
-  Plus,
-  Search,
-  Layout,
-  ClipboardList,
-  Settings,
-  User,
-  Filter,
-  ChevronRight,
-  X,
-  Paperclip,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  MoreHorizontal,
-  Kanban,
-  List,
-  Inbox
-} from 'lucide-react';
-import TicketList from './ticketlist';
+  Plus, Search, Layout, ClipboardList, Settings, User, Filter,
+  ChevronRight, X, Paperclip, CheckCircle2, MoreHorizontal,
+  Kanban, List, Inbox
+} from "lucide-react";
+import TicketList from "./ticketlist";
 
-// --- Types for internal state ---
-type ModalState = 'closed' | 'selector' | 'form';
+type ModalState = "closed" | "selector" | "form";
 
 const App: React.FC = () => {
-  // --- State ---
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [metadata, setMetadata] = useState<TicketMetadata[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-
-  const [modalState, setModalState] = useState<ModalState>('closed');
+  const [modalState, setModalState] = useState<ModalState>("closed");
   const [selectedType, setSelectedType] = useState<TicketTypeConfig | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  const [activeView, setActiveView] = useState<"board" | "settings">("board");
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
 
-  // --- Logic: Fetch Tickets ---
-useEffect(() => {
-  const fetchTickets = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    setAuthUser(user);
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setAuthUser(user);
+      if (!user) return;
+      const tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) return;
+      const { data, error } = await supabase
+        .from("nr_resolve_tickets")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false });
+      if (!error) setTickets(data ?? []);
+    };
+    init();
+  }, []);
 
-    // Get the Company ID from the user's metadata
-    const tenantId = user.user_metadata?.tenant_id; 
-
-    if (!tenantId) {
-      console.error("This user is not assigned to a tenant_id in Supabase Auth.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("nr_resolve_tickets")
-      .select("*")
-      .eq("tenant_id", tenantId) // Filter by Company ID
-      .order("created_at", { ascending: false });
-
-    if (!error) setTickets(data ?? []);
-  };
-  fetchTickets();
-}, []);
-
-  // --- Logic: Handlers ---
-  const handleOpenRaiseTicket = () => {
-    setModalState('selector');
-  };
+  const handleOpenRaiseTicket = () => setModalState("selector");
 
   const handleSelectType = (type: TicketTypeConfig) => {
     setSelectedType(type);
-    setModalState('form');
+    setModalState("form");
   };
 
   const handleCreateTicket = async (formData: Record<string, any>) => {
-    // Check state first
-    if (!authUser) {
-      alert("User not authenticated. Please refresh.");
-      return;
-    }
-
-    const tenantId = authUser.user_metadata?.tenant_id;
-    if (!tenantId) {
-      alert("tenant_id missing in user metadata");
-      return;
-    }
-
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const tenantId = user.user_metadata?.tenant_id;
+    if (!tenantId) return;
     const newTicketData = {
-      title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || 'New Request'}`,
-      description: formData.description || '',
+      title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || "New Request"}`,
+      description: formData.description || "",
       type: selectedType!.ticket_type,
-      priority: formData.urgency || formData.severity || 'MEDIUM',
-      status: 'TO DO',
+      priority: formData.urgency || formData.severity || "MEDIUM",
+      status: "TO DO",
       department: selectedType!.default_team,
       dataset: formData,
-      issue_origin: 'internal',
-      source_module: 'ticketing',
-      tenant_id: tenantId,      // Fixed: Using metadata tenantId
-      created_by: authUser.id,  // Fixed: Using current user ID
+      issue_origin: "internal",
+      source_module: "ticketing",
+      tenant_id: tenantId,
+      created_by: user.id
     };
-
     const { data, error } = await supabase
-      .from('nr_resolve_tickets')
+      .from("nr_resolve_tickets")
       .insert([newTicketData])
       .select();
-
-    if (error) {
-      console.error('Supabase Error:', error);
-      alert(`Failed to save: ${error.message}`);
-      return;
-    }
-
-    if (data?.length) {
+    if (!error && data?.length) {
       setTickets(prev => [data[0], ...prev]);
-      setModalState('closed');
+      setModalState("closed");
       setSelectedType(null);
     }
   };
@@ -139,220 +91,67 @@ useEffect(() => {
   }, [tickets, searchQuery]);
 
   return (
-    <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#0747A6] text-white flex flex-col shrink-0">
+    <div className="flex h-screen overflow-hidden bg-[#F4F5F7]">
+      <aside className="w-64 bg-[#0747A6] text-white flex flex-col">
         <div className="p-6 flex items-center gap-3">
           <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center">
-            <Inbox className="text-[#0747A6] w-5 h-5" />
+            <Inbox className="text-[#0747A6]" size={18} />
           </div>
-          <span className="font-bold text-xl tracking-tight">NestResolve</span>
+          <span className="font-bold text-xl">NestResolve</span>
         </div>
-
         <nav className="flex-1 px-3 space-y-1">
-          <NavItem icon={<Kanban size={20} />} label="Board" active={activeView === 'board' && viewMode === 'kanban'} onClick={() => { setActiveView('board'); setViewMode('kanban'); }} />
-          <NavItem icon={<List size={20} />} label="All Issues" active={activeView === 'board' && viewMode === 'list'} onClick={() => { setActiveView('board'); setViewMode('list'); }} />
-          <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">Teams</div>
-          <NavItem icon={<ClipboardList size={20} />} label="Data Team" />
-          <NavItem icon={<ClipboardList size={20} />} label="HR Ops" />
-          <NavItem icon={<ClipboardList size={20} />} label="IT/Infra" />
+          <NavItem icon={<Kanban size={20} />} label="Board" onClick={() => { setActiveView("board"); setViewMode("kanban"); }} />
+          <NavItem icon={<List size={20} />} label="All Issues" onClick={() => { setActiveView("board"); setViewMode("list"); }} />
         </nav>
-
-        <div className="p-4 border-t border-blue-800">
-          <NavItem icon={<Settings size={20} />} label="Project Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
-        </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search issues..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-md transition-all outline-none text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleOpenRaiseTicket}
-              className="bg-[#0052CC] hover:bg-[#0747A6] text-white px-4 py-2 rounded-md font-medium text-sm flex items-center gap-2 transition-colors shadow-sm"
-            >
-              <Plus size={18} /> Raise a Ticket
-            </button>
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300">
-              <User size={20} className="text-slate-500" />
-            </div>
-          </div>
+      <main className="flex-1 flex flex-col">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-6">
+          <input
+            placeholder="Search issues..."
+            className="bg-slate-100 px-4 py-2 rounded-md"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <button onClick={handleOpenRaiseTicket} className="bg-[#0052CC] text-white px-4 py-2 rounded-md flex items-center gap-2">
+            <Plus size={16} /> Raise Ticket
+          </button>
         </header>
 
-        <div className="flex-1 overflow-auto p-6">
-          {activeView === 'board' ? (
-            <>
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-800">Resolve Inbox</h1>
-                  <p className="text-slate-500 text-sm">Manage company issues in real-time.</p>
-                </div>
-                <div className="flex bg-slate-200 p-1 rounded-md">
-                  <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}>Kanban</button>
-                  <button onClick={() => setViewMode('list')} className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}>List</button>
-                </div>
-              </div>
-
-              {viewMode === 'kanban' ? (
-                <div className="flex gap-4 h-full pb-8">
-                  {(Object.values(TicketStatus) as TicketStatus[]).map(status => (
-                    <KanbanColumn key={status} status={status} tickets={filteredTickets.filter(t => t.status === status)} />
-                  ))}
-                </div>
-              ) : (
-                <TicketList tickets={filteredTickets} />
-              )}
-            </>
-          ) : (
-            <ProjectSettings />
+        <div className="flex-1 p-6 overflow-auto">
+          {viewMode === "kanban" && (
+            <div className="flex gap-4">
+              {(Object.values(TicketStatus) as TicketStatus[]).map(status => (
+                <KanbanColumn
+                  key={status}
+                  status={status}
+                  tickets={filteredTickets.filter(t => t.status === status)}
+                />
+              ))}
+            </div>
           )}
+          {viewMode === "list" && <TicketList tickets={filteredTickets} />}
         </div>
       </main>
-
-      {/* --- Modals --- */}
-      {modalState !== 'closed' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
-                </h2>
-                <p className="text-slate-500 text-sm">{selectedType?.description}</p>
-              </div>
-              <button onClick={() => setModalState('closed')} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} className="text-slate-400" /></button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {modalState === 'selector' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {TICKET_TYPES.map(type => (
-                    <button
-                      key={type.ticket_type}
-                      onClick={() => handleSelectType(type)}
-                      className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
-                    >
-                      <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">{type.icon}</span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-slate-800 group-hover:text-blue-700">{type.label}</h4>
-                        <p className="text-xs text-slate-500 line-clamp-2">{type.description}</p>
-                      </div>
-                      <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-400 shrink-0 self-center" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <DynamicForm
-                  schema={selectedType!.form_schema_json.fields}
-                  onSubmit={handleCreateTicket}
-                  onBack={() => setModalState('selector')}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-// --- Subcomponents ---
-
-const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${active ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/5'}`}
-  >
-    {icon}
-    <span>{label}</span>
+const NavItem = ({ icon, label, onClick }: any) => (
+  <button onClick={onClick} className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-white/10 rounded-md">
+    {icon}<span>{label}</span>
   </button>
 );
 
-const KanbanColumn: React.FC<{ status: TicketStatus, tickets: Ticket[] }> = ({ status, tickets }) => (
-  <div className="w-80 flex flex-col shrink-0 h-full max-h-full">
-    <div className="mb-3 px-2 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{STATUS_LABELS[status]}</span>
-        <span className="w-5 h-5 bg-slate-200 text-slate-600 text-[10px] font-bold rounded-full flex items-center justify-center">{tickets.length}</span>
-      </div>
-      <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={16} /></button>
-    </div>
-    <div className="flex-1 bg-slate-100/50 rounded-lg p-2 flex flex-col gap-3 min-h-0 border border-slate-200 overflow-y-auto">
-      {tickets.map(ticket => (
-        <div key={ticket.id} className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer group shrink-0">
-          <div className="text-sm font-medium text-slate-700 mb-2 leading-tight group-hover:text-blue-600 transition-colors">{ticket.title}</div>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${ticket.priority === Priority.CRITICAL ? 'bg-red-500' : ticket.priority === Priority.HIGH ? 'bg-orange-400' : 'bg-blue-500'}`}></span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{ticket.priority}</span>
-            </div>
-            <div className="w-6 h-6 rounded-full bg-slate-200 border border-white flex items-center justify-center"><User size={12} className="text-slate-500" /></div>
-          </div>
-        </div>
+const KanbanColumn: React.FC<{ status: TicketStatus; tickets: Ticket[] }> = ({ status, tickets }) => (
+  <div className="w-80">
+    <div className="font-bold text-xs mb-2">{STATUS_LABELS[status]}</div>
+    <div className="space-y-2">
+      {tickets.map(t => (
+        <div key={t.id} className="bg-white p-3 rounded border">{t.title}</div>
       ))}
-      {tickets.length === 0 && <div className="flex-1 border-2 border-dashed border-slate-200 rounded flex items-center justify-center text-slate-300 text-sm italic py-8">No items here</div>}
     </div>
   </div>
 );
-
-const DynamicForm = ({ schema, onSubmit, onBack }: { schema: FormField[], onSubmit: (data: any) => void, onBack: () => void }) => {
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(formData); };
-  const handleChange = (key: string, value: any) => { setFormData(prev => ({ ...prev, [key]: value })); };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {schema.map(field => (
-        <div key={field.key} className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-700 block">{field.label} {field.required && <span className="text-red-500">*</span>}</label>
-          {field.type === 'select' ? (
-            <select required={field.required} className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none" value={formData[field.key] || ''} onChange={(e) => handleChange(field.key, e.target.value)}>
-              <option value="">Select an option...</option>
-              {field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-          ) : field.type === 'textarea' ? (
-            <textarea required={field.required} className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm resize-none" rows={4} value={formData[field.key] || ''} onChange={(e) => handleChange(field.key, e.target.value)} />
-          ) : (
-            <input type={field.type} required={field.required} className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm" value={formData[field.key] || ''} onChange={(e) => handleChange(field.key, e.target.value)} />
-          )}
-        </div>
-      ))}
-      <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-        <button type="button" onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-slate-800">← Back</button>
-        <button type="submit" className="bg-[#0052CC] hover:bg-[#0747A6] text-white px-6 py-2 rounded-md font-bold text-sm shadow-md transition-all active:scale-95">Create Ticket</button>
-      </div>
-    </form>
-  );
-};
-
-const ProjectSettings: React.FC = () => {
-  return (
-    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Project Settings</h1>
-        <p className="text-slate-500">Configure your workspace and members.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
-          <div className="flex items-center gap-3 mb-4"><div className="p-2 bg-blue-100 rounded-lg text-blue-600"><Settings size={20} /></div><h3 className="font-bold text-slate-700">General</h3></div>
-          <button className="text-blue-600 text-sm font-semibold hover:underline">Edit Details →</button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default App;
