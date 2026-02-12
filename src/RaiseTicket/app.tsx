@@ -45,28 +45,39 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
-  const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
+  
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const loadTickets = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!session) {
-      console.log('No session yet');
+    if (authError || !user) {
+      console.error("Auth error", authError);
       return;
     }
 
-    console.log('AUTH USER:', session.user.id);
+    console.log("AUTH USER:", user.id);
 
     const { data, error } = await supabase
-      .from('nr_resolve_tickets')
-      .select('*');
+      .from("nr_resolve_tickets")
+      .select(`
+        id,
+        field_name,
+        confidence_score,
+        priority,
+        status,
+        created_by,
+        assigned_to,
+        tenant_id
+      `)
+      .eq("created_by", user.id)
+      .order("id", { ascending: false });
 
-    console.log('DATA:', data);
-    console.log('ERROR:', error);
+    console.log("SUPABASE DATA:", data);
+    console.log("SUPABASE ERROR:", error);
+
+    if (!error) setTickets(data ?? []);
   };
 
   loadTickets();
@@ -83,44 +94,35 @@ useEffect(() => {
     setModalState('form');
   };
 
-  const handleCreateTicket = async (formData: Record<string, any>) => {
-    // Mapping form data to your Supabase columns
-    const newTicketData = {
-      title: `${selectedType!.label}: ${formData.description?.substring(0, 30) || 'New Request'}`,
-      description: formData.description || '',
-      type: selectedType!.ticket_type,
-      priority: formData.urgency || formData.severity || 'MEDIUM',
-      // 'status' MUST be 'TODO' to appear in the first column of the board
-      status: 'TO DO',
-      department: selectedType!.default_team,
-      dataset: formData,
-      issue_origin: 'internal',
-      source_module: 'ticketing',
-      tenant_id: "00000000-0000-0000-0000-000000000000",
-      created_by: "00000000-0000-0000-0000-000000000000"
-    };
+const handleCreateTicket = async (formData: Record<string, any>) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-    const { data, error } = await supabase
-      .from('nr_resolve_tickets')
-      .insert([newTicketData])
-      .select(); // This retrieves the created row back from Supabase
-
-    if (error) {
-      console.error("Supabase Error:", error);
-      alert(`Failed to save: ${error.message}`);
-      return;
-    }
-
-    // --- Update UI State ---
-    if (data && data.length > 0) {
-      // Adding the new ticket to state triggers a re-render of the Kanban columns
-      setTickets(prevTickets => [data[0], ...prevTickets]);
-
-      // Close the modal to show the board
-      setModalState('closed');
-      setSelectedType(null);
-    }
+  const newTicket = {
+    field_name: formData.field_name ?? "Untitled",
+    confidence_score: formData.confidence_score ?? 0,
+    priority: formData.priority ?? "MEDIUM",
+    status: "OPEN",
+    created_by: user.id,
+    created_by_name: user.user_metadata?.name ?? null,
+    created_by_email: user.email ?? null,
+    assigned_to: null,
+    tenant_id: null
   };
+
+  const { data, error } = await supabase
+    .from("nr_resolve_tickets")
+    .insert([newTicket])
+    .select();
+
+  console.log("INSERT DATA:", data);
+  console.log("INSERT ERROR:", error);
+
+  if (!error && data) {
+    setTickets(prev => [data[0], ...prev]);
+  }
+};
+
 
   const filteredTickets = useMemo(() => {
     return tickets.filter(t =>
