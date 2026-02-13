@@ -50,13 +50,16 @@ const App: React.FC = () => {
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const loadTickets = async () => {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error("Auth error", authError);
+    // Check for active session first
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error("No active session", sessionError);
+      // Redirect to login or show auth UI
       return;
     }
 
+    const user = session.user;
     console.log("AUTH USER:", user.id);
 
     const { data, error } = await supabase
