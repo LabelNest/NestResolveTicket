@@ -59,7 +59,7 @@ useEffect(() => {
     console.log("AUTH USER:", session.user.id);
 
     const { data, error } = await supabase
-      .from("tickets_v2")
+      .from("nr_tickets_demo")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -94,7 +94,7 @@ const handleCreateTicket = async (formData: Record<string, any>) => {
     title: formData.title ?? formData.field_name ?? "Untitled",
     description: formData.description ?? null,
     priority: formData.priority ?? "MEDIUM",
-    status: "OPEN",
+    status: "To DO",
     created_by: user.id,
     created_by_name: user.user_metadata?.name ?? null,
     created_by_email: user.email ?? null,
@@ -103,7 +103,7 @@ const handleCreateTicket = async (formData: Record<string, any>) => {
   };
 
   const { data, error } = await supabase
-    .from("tickets_v2")
+    .from("nr_tickets_demo")
     .insert([newTicket])
     .select();
 
