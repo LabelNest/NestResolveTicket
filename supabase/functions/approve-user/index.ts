@@ -23,7 +23,7 @@ async function sendBrevoEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      "api-key": BREVO_API_KEY,
+      "api-key": BREVO_API_KEY!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -60,7 +60,8 @@ const APPROVAL_EMAIL_HTML = `<div style="font-family:-apple-system,BlinkMacSyste
       — Team LabelNest
     </p>
   </div>
-</div>`; 
+</div>`;
+
 const REJECTION_EMAIL_HTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f4f6f8;padding:40px 0">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:10px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,.06)">
     <h2 style="margin:0 0 16px;font-size:22px;color:#991b1b">Signup Request Update</h2>
@@ -75,7 +76,8 @@ const REJECTION_EMAIL_HTML = `<div style="font-family:-apple-system,BlinkMacSyst
       — Team LabelNest
     </p>
   </div>
-</div>`; 
+</div>`;
+
 
 
 serve(async (req) => {
@@ -93,9 +95,7 @@ serve(async (req) => {
     }
 
     const jwt = authHeader.replace("Bearer ", "");
-
-  
-    const { email, signupRequestId, reject } = await req.json();
+    const { email, signupRequestId, reject, tenant_id } = await req.json();
 
     if (!email || !signupRequestId) {
       return new Response(
@@ -105,16 +105,17 @@ serve(async (req) => {
     }
 
     const supabaseAdmin = createClient(
-      SUPABASE_URL,
-      SERVICE_ROLE_KEY
+      SUPABASE_URL!,
+      SERVICE_ROLE_KEY!
     );
 
-    
+  
     const {
       data: { user: adminUser },
+      error: adminError,
     } = await supabaseAdmin.auth.getUser(jwt);
 
-    if (!adminUser?.email) {
+    if (adminError || !adminUser?.email) {
       return new Response(
         JSON.stringify({ error: "Invalid admin session" }),
         { status: 401, headers: corsHeaders }
@@ -123,7 +124,7 @@ serve(async (req) => {
 
     const adminEmail = adminUser.email;
 
-    
+
     if (reject) {
       await supabaseAdmin
         .from("nr_signup_requests")
@@ -135,21 +136,6 @@ serve(async (req) => {
         action: "REJECTED",
         acted_by: adminEmail,
       });
-
-      await supabaseAdmin
-        .from("nr_admin_approval_stats")
-        .upsert(
-          {
-            admin_email: adminEmail,
-            rejected: 1,
-            total: 1,
-            last_action_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "admin_email",
-            increment: { rejected: 1, total: 1 },
-          }
-        );
 
       await sendBrevoEmail(
         email,
@@ -163,7 +149,28 @@ serve(async (req) => {
       );
     }
 
-    
+   
+
+    let resolvedTenantId = tenant_id;
+
+    if (!resolvedTenantId) {
+      const isInternal = email.endsWith("@labelnest.in");
+      const tenantCode = isInternal ? "LNI" : "GUEST";
+
+      const { data: tenant } = await supabaseAdmin
+        .from("lni_tenants")
+        .select("id")
+        .eq("code", tenantCode)
+        .single();
+
+      if (!tenant) {
+        throw new Error("Tenant not found");
+      }
+
+      resolvedTenantId = tenant.id;
+    }
+
+  
     const { data: inviteData, error: inviteError } =
       await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
@@ -173,59 +180,30 @@ serve(async (req) => {
 
     const authUserId = inviteData.user.id;
 
-    
-    const isInternal = email.endsWith("@labelnest.in");
-    const tenantCode = isInternal ? "LNI" : "GUEST";
-
-    const { data: tenant, error: tenantError } = await supabaseAdmin
-      .from("tenants")
-      .select("id")
-      .eq("code", tenantCode)
-      .single();
-
-    if (tenantError || !tenant) {
-      throw new Error(`Tenant not found for code ${tenantCode}`);
-    }
-
-    
-    await supabaseAdmin
-      .from("nr_signup_requests")
-      .update({ nr_status: "APPROVED" })
-      .eq("nr_id", signupRequestId);
-
-    
+   
     await supabaseAdmin.from("nr_users").insert({
       nr_auth_user_id: authUserId,
       nr_email: email,
       nr_name: email.split("@")[0],
       nr_role: "user",
-      tenant_id: tenant.id,
+      nr_status: "active",
+      tenant_id: resolvedTenantId,
     });
 
-    
+   
+    await supabaseAdmin
+      .from("nr_signup_requests")
+      .update({ nr_status: "APPROVED" })
+      .eq("nr_id", signupRequestId);
+
+   
     await supabaseAdmin.from("nr_signup_audit").insert({
       signup_request_id: signupRequestId,
       action: "APPROVED",
       acted_by: adminEmail,
     });
 
-   
-    await supabaseAdmin
-      .from("nr_admin_approval_stats")
-      .upsert(
-        {
-          admin_email: adminEmail,
-          approved: 1,
-          total: 1,
-          last_action_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "admin_email",
-          increment: { approved: 1, total: 1 },
-        }
-      );
-
-  
+    
     await sendBrevoEmail(
       email,
       "🎉 Account Approved – LabelNest",
@@ -236,6 +214,7 @@ serve(async (req) => {
       JSON.stringify({ success: true }),
       { headers: corsHeaders }
     );
+
   } catch (err: any) {
     console.error("EDGE FUNCTION ERROR:", err);
     return new Response(
