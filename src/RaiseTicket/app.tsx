@@ -50,41 +50,30 @@ const App: React.FC = () => {
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const loadTickets = async () => {
-    // Check for active session first
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session) {
-      console.error("No active session", sessionError);
-      // Redirect to login or show auth UI
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error("No active session");
       return;
     }
 
-    const user = session.user;
-    console.log("AUTH USER:", user.id);
+    console.log("AUTH USER:", session.user.id);
 
     const { data, error } = await supabase
-      .from("nr_resolve_tickets")
-      .select(`
-        id,
-        field_name,
-        confidence_score,
-        priority,
-        status,
-        created_by,
-        assigned_to,
-        tenant_id
-      `)
-      .eq("created_by", user.id)
-      .order("id", { ascending: false });
+      .from("tickets_v2")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    console.log("SUPABASE DATA:", data);
-    console.log("SUPABASE ERROR:", error);
+    console.log("FETCH DATA:", data);
+    console.log("FETCH ERROR:", error);
 
-    if (!error) setTickets(data ?? []);
+    if (!error && data) {
+      setTickets(data);
+    }
   };
 
   loadTickets();
 }, []);
+
 
 
   // --- Logic ---
@@ -102,8 +91,8 @@ const handleCreateTicket = async (formData: Record<string, any>) => {
   if (!user) return;
 
   const newTicket = {
-    field_name: formData.field_name ?? "Untitled",
-    confidence_score: formData.confidence_score ?? 0,
+    title: formData.title ?? formData.field_name ?? "Untitled",
+    description: formData.description ?? null,
     priority: formData.priority ?? "MEDIUM",
     status: "OPEN",
     created_by: user.id,
@@ -114,7 +103,7 @@ const handleCreateTicket = async (formData: Record<string, any>) => {
   };
 
   const { data, error } = await supabase
-    .from("nr_resolve_tickets")
+    .from("tickets_v2")
     .insert([newTicket])
     .select();
 
@@ -127,12 +116,13 @@ const handleCreateTicket = async (formData: Record<string, any>) => {
 };
 
 
-  const filteredTickets = useMemo(() => {
-    return tickets.filter(t =>
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.key.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [tickets, searchQuery]);
+
+const filteredTickets = useMemo(() => {
+  return tickets.filter(t =>
+    (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+}, [tickets, searchQuery]);
+
 
   return (
     <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
