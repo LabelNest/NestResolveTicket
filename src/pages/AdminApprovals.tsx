@@ -16,6 +16,7 @@ type SignupRequest = {
 type Tenant = {
   id: string;
   name: string;
+  code: string;
 };
 
 
@@ -37,7 +38,7 @@ const AdminApprovals = () => {
     tenant_id: "",
   });
 
-
+ 
   useEffect(() => {
     init();
   }, []);
@@ -75,7 +76,7 @@ const AdminApprovals = () => {
   const loadTenants = async () => {
     const { data, error } = await supabase
       .from("lni_tenants")
-      .select("id, name")
+      .select("id, name, code")
       .eq("status", "active");
 
     if (error) {
@@ -86,27 +87,29 @@ const AdminApprovals = () => {
     setTenants(data || []);
   };
 
-
+  
   const handleEmailChange = (email: string) => {
     const isInternal = email.endsWith("@labelnest.in");
-
-    const matchedTenant = tenants.find(t =>
-      isInternal
-        ? t.name.toLowerCase().includes("labelnest")
-        : t.name.toLowerCase().includes("guest")
+    const tenant = tenants.find(t =>
+      isInternal ? t.code === "LNI" : t.code === "GUEST"
     );
 
     setNewUser(prev => ({
       ...prev,
       email,
-      tenant_id: matchedTenant?.id || "",
+      tenant_id: tenant?.id || "",
     }));
   };
 
-
+ 
   const approve = async (req: SignupRequest) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
+
+    const isInternal = req.nr_email.endsWith("@labelnest.in");
+    const tenant = tenants.find(t =>
+      isInternal ? t.code === "LNI" : t.code === "GUEST"
+    );
 
     const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
@@ -117,6 +120,7 @@ const AdminApprovals = () => {
       body: JSON.stringify({
         email: req.nr_email,
         signupRequestId: req.nr_id,
+        tenant_id: tenant?.id,
       }),
     });
 
@@ -130,7 +134,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-
+  
   const reject = async (id: string) => {
     await supabase
       .from("nr_signup_requests")
@@ -141,17 +145,29 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
-
+  
   const createUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.tenant_id) {
       toast.warning("Please fill all fields");
       return;
     }
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
 
-    
+   
+    const { data: existing } = await supabase
+      .from("nr_signup_requests")
+      .select("nr_id")
+      .eq("nr_email", newUser.email)
+      .maybeSingle();
+
+    if (existing) {
+      toast.warning("User with this email already exists");
+      return;
+    }
+
+   
     const { data: request, error } = await supabase
       .from("nr_signup_requests")
       .insert({
@@ -163,7 +179,7 @@ const AdminApprovals = () => {
       .select()
       .single();
 
-    if (error) {
+    if (error || !request) {
       toast.error("Failed to create signup request");
       return;
     }
@@ -172,7 +188,7 @@ const AdminApprovals = () => {
     const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${session.session.access_token}`,
+        Authorization: `Bearer ${data.session.access_token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -194,7 +210,7 @@ const AdminApprovals = () => {
     loadRequests();
   };
 
- 
+  
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.nr_status === "PENDING").length,
@@ -202,11 +218,9 @@ const AdminApprovals = () => {
     rejected: requests.filter(r => r.nr_status === "REJECTED").length,
   };
 
-  const pendingRequests = requests.filter(
-    r => r.nr_status === "PENDING"
-  );
+  const pendingRequests = requests.filter(r => r.nr_status === "PENDING");
 
- 
+  
   return (
     <div className="p-10 space-y-6">
       <div className="flex justify-between items-center">
@@ -221,12 +235,8 @@ const AdminApprovals = () => {
         <Stat label="Rejected" value={stats.rejected} />
       </div>
 
-
       {pendingRequests.map(r => (
-        <div
-          key={r.nr_id}
-          className="border rounded p-4 flex justify-between"
-        >
+        <div key={r.nr_id} className="border rounded p-4 flex justify-between">
           <div>
             <p className="font-medium">{r.nr_name}</p>
             <p className="text-sm">{r.nr_email}</p>
@@ -240,7 +250,6 @@ const AdminApprovals = () => {
         </div>
       ))}
 
-      
       {showAdd && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white text-black p-6 w-96 space-y-3 rounded">
@@ -262,7 +271,6 @@ const AdminApprovals = () => {
               onChange={e => handleEmailChange(e.target.value)}
             />
 
-            
             <select
               className="border p-2 w-full"
               value={newUser.tenant_id}
