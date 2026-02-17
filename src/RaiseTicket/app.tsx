@@ -87,37 +87,35 @@ useEffect(() => {
   };
 
 const handleCreateTicket = async (formData: any) => {
+  console.log("FORM DATA FULL:", formData);
+
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) return;
 
+  const payload = {
+    title: formData.title ?? null,
+    description: formData.description ?? null,
+    department: formData.department ?? null,
+    priority: formData.priority ?? null,
+    status: "TO DO",
+    created_by: user.id,
+    created_by_name: user.email,
+    created_by_email: user.email,
+    tenant_id: user.id
+  };
+
+  console.log("INSERT PAYLOAD:", payload);
+
   const { data, error } = await supabase
     .from("nr_tickets_demo")
-    .insert([
-      {
-        title: formData.title, // REQUIRED
-        description: formData.description || null,
-        department: formData.department || null,
-        type: formData.type || null,
-        issue_origin: "MANUAL",
-        priority: formData.priority,
-        status: TicketStatus.TODO,
-        created_by: user.id,
-        created_by_name: user.email,
-        created_by_email: user.email,
-        tenant_id: user.id
-      }
-    ])
+    .insert([payload])
     .select();
 
   console.log("INSERT DATA:", data);
-  console.log("INSERT ERROR:", error);
-
-    if (!error && data) {
-    setTickets(prev => [data[0], ...prev]);
-  }
+  console.log("INSERT ERROR FULL:", JSON.stringify(error, null, 2));
 };
 
 
