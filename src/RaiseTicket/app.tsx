@@ -91,19 +91,19 @@ const handleCreateTicket = async (formData: any) => {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    console.log("No user found");
-    return;
-  }
+  if (!user) return;
 
   const { data, error } = await supabase
     .from("nr_tickets_demo")
     .insert([
       {
-        title: formData.title,
-        description: formData.description,
-        priority: formData.priority, // must match enum exactly
+        title: formData.title, // REQUIRED
+        description: formData.description || null,
         department: formData.department || null,
+        type: formData.type || null,
+        issue_origin: "MANUAL",
+        priority: formData.priority,
+        status: TicketStatus.TODO,
         created_by: user.id,
         created_by_name: user.email,
         created_by_email: user.email,
@@ -119,6 +119,7 @@ const handleCreateTicket = async (formData: any) => {
     setTickets(prev => [data[0], ...prev]);
   }
 };
+
 
 
 const filteredTickets = useMemo(() => {
