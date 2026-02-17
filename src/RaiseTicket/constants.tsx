@@ -241,5 +241,5 @@ export const STATUS_LABELS = {
   [TicketStatus.ACKNOWLEDGED]: 'ACKNOWLEDGED',
   [TicketStatus.IN_REVIEW]: 'IN REVIEW',
   [TicketStatus.DONE]: 'DONE',
-  [TicketStatus.REJECTED]: 'REJECSTED',
+  [TicketStatus.REJECTED]: 'REJECTED',
 };
