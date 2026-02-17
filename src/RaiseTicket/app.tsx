@@ -101,7 +101,7 @@ const handleCreateTicket = async (formData: any) => {
     description: formData.description ?? null,
     department: selectedType?.default_team ?? null,
     type: selectedType?.ticket_type ?? null,
-    issue_origin: "MANUAL",
+    issue_origin: "INTERNAL",
     priority: "MEDIUM", // default priority for now
     status: TicketStatus.TODO,
     created_by: user.id,
@@ -116,9 +116,6 @@ const handleCreateTicket = async (formData: any) => {
     .from("nr_tickets_demo")
     .insert([payload])
     .select();
-
-  console.log("INSERT DATA:", data);
-  console.log("INSERT ERROR:", error);
 
   if (!error && data) {
     setTickets(prev => [data[0], ...prev]);
