@@ -87,20 +87,23 @@ useEffect(() => {
   };
 
 const handleCreateTicket = async (formData: any) => {
-  console.log("FORM DATA FULL:", formData);
-
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) return;
 
+  // 🔥 Auto-generate title based on selected type
+  const generatedTitle = selectedType?.label + " - " + (formData.description?.slice(0, 30) || "New Issue");
+
   const payload = {
-    title: formData.title ?? null,
+    title: generatedTitle,
     description: formData.description ?? null,
-    department: formData.department ?? null,
-    priority: formData.priority ?? null,
-    status: "TO DO",
+    department: selectedType?.default_team ?? null,
+    type: selectedType?.ticket_type ?? null,
+    issue_origin: "MANUAL",
+    priority: "MEDIUM", // default priority for now
+    status: TicketStatus.TODO,
     created_by: user.id,
     created_by_name: user.email,
     created_by_email: user.email,
@@ -115,8 +118,14 @@ const handleCreateTicket = async (formData: any) => {
     .select();
 
   console.log("INSERT DATA:", data);
-  console.log("INSERT ERROR FULL:", JSON.stringify(error, null, 2));
+  console.log("INSERT ERROR:", error);
+
+  if (!error && data) {
+    setTickets(prev => [data[0], ...prev]);
+    setModalState("closed");
+  }
 };
+
 
 
 
