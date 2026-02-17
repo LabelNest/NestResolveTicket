@@ -39,16 +39,26 @@ export interface FormField {
 
 export interface Ticket {
   id: string;
-  field_name: string | null;
-  confidence_score: number | null;
-  created_by_name: string | null;
-  created_by_email: string | null;
+  tenant_id: string | null;
+  issue_origin: string | null;
+  title: string;
+  description: string | null;
+  type: string | null;
+  department: string | null;
   priority: Priority;
   status: TicketStatus;
-  created_by: string;
+  created_by: string | null;
   assigned_to: string | null;
-  tenant_id: string | null;
+  created_by_name: string | null;
+  created_by_email: string | null;
+  created_at: string | null;
+  source_module: string | null;
+  dataset: string | null;
+  entity_id: string | null;
+  field_name: string | null;
+  confidence_score: number | null;
 }
+
 
 export interface TicketMetadata {
   id: string;
