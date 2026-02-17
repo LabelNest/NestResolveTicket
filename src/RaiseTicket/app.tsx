@@ -86,35 +86,39 @@ useEffect(() => {
     setModalState('form');
   };
 
-const handleCreateTicket = async (formData: Record<string, any>) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+const handleCreateTicket = async (formData: any) => {
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
 
-  const newTicket = {
-    title: formData.title ?? formData.field_name ?? "Untitled",
-    description: formData.description ?? null,
-    priority: formData.priority ?? "MEDIUM",
-    status: "To DO",
-    created_by: user.id,
-    created_by_name: user.user_metadata?.name ?? null,
-    created_by_email: user.email ?? null,
-    assigned_to: null,
-    tenant_id: null
-  };
+  if (!user) {
+    console.log("No user found");
+    return;
+  }
 
   const { data, error } = await supabase
     .from("nr_tickets_demo")
-    .insert([newTicket])
+    .insert([
+      {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority, // must match enum exactly
+        department: formData.department || null,
+        created_by: user.id,
+        created_by_name: user.email,
+        created_by_email: user.email,
+        tenant_id: user.id
+      }
+    ])
     .select();
 
   console.log("INSERT DATA:", data);
   console.log("INSERT ERROR:", error);
 
-  if (!error && data) {
+    if (!error && data) {
     setTickets(prev => [data[0], ...prev]);
   }
 };
-
 
 
 const filteredTickets = useMemo(() => {
