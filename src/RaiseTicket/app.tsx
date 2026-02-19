@@ -59,7 +59,7 @@ useEffect(() => {
     console.log("AUTH USER:", session.user.id);
 
     const { data, error } = await supabase
-      .from("nr_tickets_demo")
+      .from("nr_tickets_internal")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -113,7 +113,7 @@ const handleCreateTicket = async (formData: any) => {
   console.log("INSERT PAYLOAD:", payload);
 
   const { data, error } = await supabase
-    .from("nr_tickets_demo")
+    .from("nr_tickets_internal")
     .insert([payload])
     .select();
 
