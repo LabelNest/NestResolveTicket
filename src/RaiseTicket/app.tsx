@@ -58,10 +58,17 @@ useEffect(() => {
 
     console.log("AUTH USER:", session.user.id);
 
-    const { data, error } = await supabase
-      .from("nr_tickets_internal")
-      .select("*")
-      .order("created_at", { ascending: false });
+const { data, error } = await supabase
+  .from("nr_tickets_internal")
+  .select(`
+    *,
+    nr_users (
+      nr_name,
+      nr_email
+    )
+  `)
+  .order("created_at", { ascending: false });
+
 
     console.log("FETCH DATA:", data);
     console.log("FETCH ERROR:", error);
