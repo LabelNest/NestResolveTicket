@@ -62,7 +62,7 @@ const { data, error } = await supabase
   .from("nr_tickets_internal")
   .select(`
     *,
-    nr_users (
+    user: nr_users!nr_tickets_demo_created_by_fkey (
       nr_name,
       nr_email
     )
