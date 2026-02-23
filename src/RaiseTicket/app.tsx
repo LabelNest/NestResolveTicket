@@ -94,44 +94,66 @@ const { data, error } = await supabase
   };
 
 const handleCreateTicket = async (formData: any) => {
+  // 1️⃣ Get logged-in auth user
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) return;
 
-  // 🔥 Auto-generate title based on selected type
-  const generatedTitle = selectedType?.label + " - " + (formData.description?.slice(0, 30) || "New Issue");
+  // 2️⃣ Fetch user details from nr_users table
+  const { data: userDetails, error: userError } = await supabase
+    .from("nr_users")
+    .select("nr_name, nr_email")
+    .eq("nr_auth_user_id", user.id)
+    .single();
 
+  if (userError) {
+    console.error("Error fetching user details:", userError);
+    return;
+  }
+
+  // 3️⃣ Auto-generate title
+  const generatedTitle =
+    selectedType?.label +
+    " - " +
+    (formData.description?.slice(0, 30) || "New Issue");
+
+  // 4️⃣ Correct payload
   const payload = {
     title: generatedTitle,
     description: formData.description ?? null,
     department: selectedType?.default_team ?? null,
     type: selectedType?.ticket_type ?? null,
     issue_origin: "INTERNAL",
-    priority: "MEDIUM", // default priority for now
+    priority: "MEDIUM",
     status: TicketStatus.TODO,
     created_by: user.id,
-    created_by_name: user.email,
-    created_by_email: user.email,
+    created_by_name: userDetails?.nr_name ?? null,   // ✅ Correct name
+    created_by_email: userDetails?.nr_email ?? null, // ✅ Correct email
     tenant_id: user.id
   };
 
   console.log("INSERT PAYLOAD:", payload);
 
+  // 5️⃣ Insert ticket
   const { data, error } = await supabase
     .from("nr_tickets_internal")
     .insert([payload])
     .select();
 
-  if (!error && data) {
+  if (error) {
+    console.error("Insert error:", error);
+    return;
+  }
+
+  if (data) {
     setTickets(prev => [data[0], ...prev]);
     setModalState("closed");
   }
 };
 
-
-
+  
 
 const filteredTickets = useMemo(() => {
   return tickets.filter(t =>
