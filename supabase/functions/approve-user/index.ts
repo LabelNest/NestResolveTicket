@@ -19,6 +19,22 @@ const corsHeaders = {
 };
 
 
+function formatNameFromEmail(email: string) {
+  const localPart = email.split("@")[0];
+
+  return localPart
+    .split(".")
+    .map(part => {
+      const cleaned = part.replace(/[0-9]/g, "");
+      if (!cleaned) return "";
+      return cleaned.charAt(0).toUpperCase() +
+             cleaned.slice(1).toLowerCase();
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+
 async function sendBrevoEmail(to: string, subject: string, html: string) {
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -109,7 +125,6 @@ serve(async (req) => {
       SERVICE_ROLE_KEY!
     );
 
-  
     const {
       data: { user: adminUser },
       error: adminError,
@@ -124,7 +139,7 @@ serve(async (req) => {
 
     const adminEmail = adminUser.email;
 
-
+  
     if (reject) {
       await supabaseAdmin
         .from("nr_signup_requests")
@@ -163,14 +178,11 @@ serve(async (req) => {
         .eq("code", tenantCode)
         .single();
 
-      if (!tenant) {
-        throw new Error("Tenant not found");
-      }
+      if (!tenant) throw new Error("Tenant not found");
 
       resolvedTenantId = tenant.id;
     }
 
-  
     const { data: inviteData, error: inviteError } =
       await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
@@ -180,30 +192,29 @@ serve(async (req) => {
 
     const authUserId = inviteData.user.id;
 
-   
+    
+    const formattedName = formatNameFromEmail(email);
+
     await supabaseAdmin.from("nr_users").insert({
       nr_auth_user_id: authUserId,
       nr_email: email,
-      nr_name: email.split("@")[0],
+      nr_name: formattedName,
       nr_role: "user",
       nr_status: "active",
       tenant_id: resolvedTenantId,
     });
 
-   
     await supabaseAdmin
       .from("nr_signup_requests")
       .update({ nr_status: "APPROVED" })
       .eq("nr_id", signupRequestId);
 
-   
     await supabaseAdmin.from("nr_signup_audit").insert({
       signup_request_id: signupRequestId,
       action: "APPROVED",
       acted_by: adminEmail,
     });
 
-    
     await sendBrevoEmail(
       email,
       "🎉 Account Approved – LabelNest",
