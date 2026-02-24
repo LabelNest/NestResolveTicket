@@ -25,18 +25,18 @@ const RaiseTicket = () => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
- 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      
+     
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      
+  
       const isInternal = email.toLowerCase().endsWith("@labelnest.in");
       const tenantCode = isInternal ? "LNI" : "GUEST";
 
@@ -60,7 +60,7 @@ const RaiseTicket = () => {
           description,
           type: category,
 
-          created_by: user?.id ?? null,     
+          created_by: user?.id ?? null,    
           created_by_name: name,             
           created_by_email: email,           
 
@@ -91,7 +91,7 @@ const RaiseTicket = () => {
     }
   };
 
-  
+ 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="glass-card p-8 w-full max-w-md animate-slide-up transition-all">
@@ -126,7 +126,7 @@ const RaiseTicket = () => {
             ))}
           </select>
 
-          
+        
           <Input
             placeholder="Your full name"
             value={name}
