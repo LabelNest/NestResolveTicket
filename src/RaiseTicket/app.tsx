@@ -207,7 +207,7 @@ const filteredTickets = useMemo(() => {
   {/* Switch to Admin Button */}
   {isAdmin && (
     <button
-      onClick={() => navigate("/admin/approvals")}
+      onClick={() => navigate("@/pages/AdminApprovals.tsx")}
       className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
     >
       <Shield size={20} />
