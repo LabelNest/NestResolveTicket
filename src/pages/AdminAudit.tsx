@@ -26,7 +26,6 @@ const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#f59e0b"];
 
 const AdminAudit = () => {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
 
   const [counts, setCounts] = useState({
@@ -42,12 +41,11 @@ const AdminAudit = () => {
     init();
   }, []);
 
- 
+
   const init = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return navigate("/");
 
-   
     const { data: admin } = await supabase
       .from("nr_admins_list")
       .select("nr_email")
@@ -60,27 +58,33 @@ const AdminAudit = () => {
     setLoading(false);
   };
 
-  
+ 
   const loadAuditData = async () => {
     const [
       authUsers,
       platformUsers,
       admins,
-      tickets,
+      externalTickets,
+      internalTickets,
       adminStats,
     ] = await Promise.all([
       supabase.from("nr_auth_users").select("id"),
       supabase.from("nr_users").select("nr_id"),
       supabase.from("nr_admins_list").select("nr_id"),
       supabase.from("nr_resolve_tickets").select("id"),
+      supabase.from("nr_tickets_internal").select("id"),
       supabase.from("nr_admin_approval_stats").select("*"),
     ]);
+
+    const totalTickets =
+      (externalTickets.data?.length || 0) +
+      (internalTickets.data?.length || 0);
 
     setCounts({
       authUsers: authUsers.data?.length || 0,
       platformUsers: platformUsers.data?.length || 0,
       admins: admins.data?.length || 0,
-      tickets: tickets.data?.length || 0,
+      tickets: totalTickets,
     });
 
     setAdminStats(adminStats.data || []);
@@ -94,14 +98,12 @@ const AdminAudit = () => {
     );
   }
 
- 
   return (
     <div className="p-10 space-y-10">
       <h1 className="text-2xl font-semibold">
         System Overview
       </h1>
 
-      
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
         <Metric label="Auth Users" value={counts.authUsers} />
         <Metric label="Platform Users" value={counts.platformUsers} />
@@ -109,9 +111,7 @@ const AdminAudit = () => {
         <Metric label="Total Tickets" value={counts.tickets} />
       </div>
 
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-       
         <div className="glass-card p-6 rounded-xl">
           <h2 className="mb-4 font-medium">Approval Actions</h2>
           <ResponsiveContainer width="100%" height={260}>
@@ -144,7 +144,6 @@ const AdminAudit = () => {
           </ResponsiveContainer>
         </div>
 
-        
         <div className="glass-card p-6 rounded-xl">
           <h2 className="mb-4 font-medium">Admin Activity</h2>
           <ResponsiveContainer width="100%" height={260}>
@@ -162,7 +161,6 @@ const AdminAudit = () => {
         </div>
       </div>
 
-      
       <div className="glass-card rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/5">
@@ -206,7 +204,6 @@ const AdminAudit = () => {
     </div>
   );
 };
-
 
 const Metric = ({ label, value }: any) => (
   <div className="glass-card p-6 rounded-xl">
