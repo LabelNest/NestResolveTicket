@@ -28,7 +28,6 @@ const SignupCard = () => {
         return;
       }
 
-
       const { error: authProbeError } =
         await supabase.auth.signInWithOtp({
           email,
@@ -84,10 +83,10 @@ const SignupCard = () => {
           return;
         }
 
-       
+        
       }
 
-      
+
       const { error: insertError } = await supabase
         .from("nr_signup_requests")
         .insert({
@@ -98,12 +97,28 @@ const SignupCard = () => {
 
       if (insertError) throw insertError;
 
+
+      await fetch(
+        "https://evugaodpzepyjonlrptn.supabase.co/functions/v1/notify-admin-signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+          }),
+        }
+      );
+
       toast.success(
         "Signup request submitted successfully. Please wait for admin approval."
       );
 
       setName("");
       setEmail("");
+
     } catch (err: any) {
       toast.error(err.message || "Signup failed");
     } finally {
@@ -111,7 +126,7 @@ const SignupCard = () => {
     }
   };
 
- 
+
   return (
     <div className="glass-card p-8 sm:p-10 w-full max-w-md animate-slide-up">
       <div className="text-center mb-8">
@@ -124,7 +139,7 @@ const SignupCard = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-       
+        
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Full Name
@@ -140,7 +155,7 @@ const SignupCard = () => {
           </div>
         </div>
 
-        
+       
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wide">
             Email Address
@@ -175,4 +190,3 @@ const SignupCard = () => {
 };
 
 export default SignupCard;
-
