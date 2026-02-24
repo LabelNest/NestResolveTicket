@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
+import { Shield } from "lucide-react";
+
 import { supabase } from '@/lib/supabaseClient';
 import {
   Ticket,
@@ -45,12 +48,14 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
-  
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
-  const loadTickets = async () => {
+  const initializePage = async () => {
+    // 1️⃣ Get session
     const { data: { session } } = await supabase.auth.getSession();
+
     if (!session) {
       console.error("No active session");
       return;
@@ -58,17 +63,28 @@ useEffect(() => {
 
     console.log("AUTH USER:", session.user.id);
 
-const { data, error } = await supabase
-  .from("nr_tickets_internal")
-  .select(`
-    *,
-    user:nr_users!nr_tickets_demo_created_by_fkey (
-      nr_name,
-      nr_email
-    )
-  `)
-  .order("created_at", { ascending: false });
+    // 2️⃣ Check if user is admin
+    const { data: admin } = await supabase
+      .from("nr_admins")
+      .select("nr_id")
+      .eq("nr_email", session.user.email)
+      .maybeSingle();
 
+    if (admin) {
+      setIsAdmin(true);
+    }
+
+    // 3️⃣ Load tickets
+    const { data, error } = await supabase
+      .from("nr_tickets_internal")
+      .select(`
+        *,
+        user:nr_users!nr_tickets_demo_created_by_fkey (
+          nr_name,
+          nr_email
+        )
+      `)
+      .order("created_at", { ascending: false });
 
     console.log("FETCH DATA:", data);
     console.log("FETCH ERROR:", error);
@@ -78,7 +94,7 @@ const { data, error } = await supabase
     }
   };
 
-  loadTickets();
+  initializePage();
 }, []);
 
 
@@ -185,6 +201,24 @@ const filteredTickets = useMemo(() => {
         </nav>
 
         <div className="p-4 border-t border-blue-800">
+                  {isAdmin && (
+                    <NavLink
+                        to="/admin/approvals"
+                        className={({ isActive }) =>
+                          `
+                          flex items-center gap-3 px-3 py-2 rounded-lg
+                          transition-all duration-200
+                          ${
+                            isActive
+                              ? "bg-white/20 font-medium shadow-inner"
+                              : "hover:bg-white/10 hover:translate-x-1"
+                          }
+                          `
+                        }
+                    >
+                        🛠 Admin Panel
+                    </NavLink>
+                    )}
           <NavItem
             icon={<Settings size={20} />}
             label="Project Settings"
