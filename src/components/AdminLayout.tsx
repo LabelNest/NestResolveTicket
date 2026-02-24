@@ -7,6 +7,7 @@ import {
   Ticket,
   ClipboardList,
   LogOut,
+  Repeat, 
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -17,9 +18,14 @@ const AdminLayout = () => {
     navigate("/");
   };
 
+  const switchToUser = () => {
+    localStorage.setItem("view_mode", "user");
+    navigate("/resolve"); 
+  };
+
   return (
     <div className="flex min-h-screen bg-[#0b1220]">
-      
+     
       <aside className="w-64 bg-[#1e3a8a] text-white flex flex-col">
 
         
@@ -28,7 +34,6 @@ const AdminLayout = () => {
             <b>ADMIN PANEL</b>
           </p>
 
-          
           <div className="flex items-center gap-3">
             <img
               src="/labelnest-logo.jpg"
@@ -46,7 +51,7 @@ const AdminLayout = () => {
           </div>
         </div>
 
-       
+        
         <nav className="flex-1 px-3 py-4 space-y-1">
           <SideItem
             to="/admin/approvals"
@@ -68,7 +73,7 @@ const AdminLayout = () => {
             icon={<Building2 size={18} />}
             label="Tenants"
           />
-            <SideItem
+          <SideItem
             to="/admin/admin-users"
             icon={<User2 size={18} />}
             label="Users"
@@ -78,8 +83,33 @@ const AdminLayout = () => {
             icon={<ClipboardList size={18} />}
             label="System Overview"
           />
-
         </nav>
+
+       
+        <div className="px-4 pb-2">
+          <button
+            onClick={switchToUser}
+            className="
+              group w-full flex items-center justify-between
+              px-4 py-2 rounded-lg
+              text-white/80
+              hover:text-white
+              bg-gradient-to-r from-transparent to-transparent
+              hover:from-white/15 hover:to-white/5
+              transition-all duration-300 ease-out
+            "
+          >
+            <div className="flex items-center gap-2">
+              <Repeat
+                size={18}
+                className="transition-transform duration-300 group-hover:rotate-180"
+              />
+              <span className="font-medium tracking-wide">
+                Switch to User
+              </span>
+            </div>
+          </button>
+        </div>
 
         
         <div className="p-4 border-t border-white/10">
@@ -122,7 +152,7 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      
+     
       <main className="flex-1 p-6 overflow-auto">
         <Outlet />
       </main>
