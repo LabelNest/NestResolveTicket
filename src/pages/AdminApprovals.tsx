@@ -38,7 +38,7 @@ const AdminApprovals = () => {
     tenant_id: "",
   });
 
- 
+
   useEffect(() => {
     init();
   }, []);
@@ -63,7 +63,7 @@ const AdminApprovals = () => {
     loadTenants();
   };
 
- 
+
   const loadRequests = async () => {
     const { data } = await supabase
       .from("nr_signup_requests")
@@ -87,7 +87,7 @@ const AdminApprovals = () => {
     setTenants(data || []);
   };
 
-  
+ 
   const handleEmailChange = (email: string) => {
     const isInternal = email.endsWith("@labelnest.in");
     const tenant = tenants.find(t =>
@@ -101,10 +101,12 @@ const AdminApprovals = () => {
     }));
   };
 
- 
+
   const approve = async (req: SignupRequest) => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
+
+    const adminEmail = data.session.user.email;
 
     const isInternal = req.nr_email.endsWith("@labelnest.in");
     const tenant = tenants.find(t =>
@@ -121,6 +123,7 @@ const AdminApprovals = () => {
         email: req.nr_email,
         signupRequestId: req.nr_id,
         tenant_id: tenant?.id,
+        processed_by_email: adminEmail,
       }),
     });
 
@@ -130,22 +133,49 @@ const AdminApprovals = () => {
       return;
     }
 
+
+    const { error } = await supabase
+      .from("nr_signup_requests")
+      .update({
+        nr_status: "APPROVED",
+        processed_by_email: adminEmail,
+      })
+      .eq("nr_id", req.nr_id);
+
+    if (error) {
+      toast.error("Status update failed");
+      return;
+    }
+
     toast.success("Approved & email sent");
     loadRequests();
   };
 
-  
+
   const reject = async (id: string) => {
-    await supabase
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+
+    const adminEmail = data.session.user.email;
+
+    const { error } = await supabase
       .from("nr_signup_requests")
-      .update({ nr_status: "REJECTED" })
+      .update({
+        nr_status: "REJECTED",
+        processed_by_email: adminEmail,
+      })
       .eq("nr_id", id);
+
+    if (error) {
+      toast.error("Failed to reject request");
+      return;
+    }
 
     toast.info("Request rejected");
     loadRequests();
   };
 
-  
+
   const createUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.tenant_id) {
       toast.warning("Please fill all fields");
@@ -155,7 +185,6 @@ const AdminApprovals = () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
 
-   
     const { data: existing } = await supabase
       .from("nr_signup_requests")
       .select("nr_id")
@@ -167,7 +196,6 @@ const AdminApprovals = () => {
       return;
     }
 
-   
     const { data: request, error } = await supabase
       .from("nr_signup_requests")
       .insert({
@@ -184,7 +212,6 @@ const AdminApprovals = () => {
       return;
     }
 
-    
     const res = await fetch(APPROVE_FUNCTION_URL, {
       method: "POST",
       headers: {
@@ -195,6 +222,7 @@ const AdminApprovals = () => {
         email: request.nr_email,
         signupRequestId: request.nr_id,
         tenant_id: newUser.tenant_id,
+        processed_by_email: data.session.user.email,
       }),
     });
 
@@ -204,13 +232,22 @@ const AdminApprovals = () => {
       return;
     }
 
+
+    await supabase
+      .from("nr_signup_requests")
+      .update({
+        nr_status: "APPROVED",
+        processed_by_email: data.session.user.email,
+      })
+      .eq("nr_id", request.nr_id);
+
     toast.success("User created & approved");
     setShowAdd(false);
     setNewUser({ name: "", email: "", role: "user", tenant_id: "" });
     loadRequests();
   };
 
-  
+
   const stats = {
     total: requests.length,
     pending: requests.filter(r => r.nr_status === "PENDING").length,
@@ -220,7 +257,7 @@ const AdminApprovals = () => {
 
   const pendingRequests = requests.filter(r => r.nr_status === "PENDING");
 
-  
+
   return (
     <div className="p-10 space-y-6">
       <div className="flex justify-between items-center">
