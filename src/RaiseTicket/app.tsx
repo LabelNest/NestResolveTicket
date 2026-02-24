@@ -49,7 +49,7 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
   const [isAdmin, setIsAdmin] = useState(false);
-  
+  const navigate = useNavigate();
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
