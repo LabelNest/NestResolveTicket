@@ -50,6 +50,8 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const internalType = getInternalType(category); //added for classification
+
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
@@ -146,9 +148,37 @@ const handleCreateTicket = async (formData: any) => {
     created_by_name: userDetails?.nr_name ?? null,   // ✅ Correct name
     created_by_email: userDetails?.nr_email ?? null, // ✅ Correct email
     tenant_id: user.id
+    types: internalType //added classification
   };
 
   console.log("INSERT PAYLOAD:", payload);
+
+
+  //Classification Function
+  function getInternalType(category: string) {
+  const dataCategories = [
+    "Data / Dataset Issue",
+    "QA Issue"
+  ];
+
+  const hrCategories = [
+    "HR Issue",
+    "Admin / Ops Issue",
+    "General Feedback"
+  ];
+
+  const infraCategories = [
+    "Asset / Infra Issue",
+    "Platform / Login Issue",
+    "Feature Request"
+  ];
+
+  if (dataCategories.includes(category)) return "Data";
+  if (hrCategories.includes(category)) return "HR";
+  if (infraCategories.includes(category)) return "Infra";
+
+  return null;
+}
 
   // 5️⃣ Insert ticket
   const { data, error } = await supabase
