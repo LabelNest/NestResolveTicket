@@ -200,12 +200,13 @@ const filteredTickets = useMemo(() => {
 
         
 {/* Bottom Section */}
+{/* Bottom Section */}
 <div className="p-4 border-t border-blue-800 space-y-2">
 
   {/* Switch to Admin Button */}
   {isAdmin && (
     <button
-      onClick={() => setActiveView("admin")}
+      onClick={() => navigate("@/pages/AdminApprovals.tsx")}
       className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
     >
       <Shield size={20} />
@@ -222,6 +223,7 @@ const filteredTickets = useMemo(() => {
   />
 
 </div>
+
 
       </aside>
 
