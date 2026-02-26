@@ -50,8 +50,8 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-  const internalType = getInternalType(category); //added for classification
 
+  
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
@@ -109,6 +109,32 @@ useEffect(() => {
     setModalState('form');
   };
 
+//classification function
+ function getInternalType(category: string) {
+  const dataCategories = [
+    "Data / Dataset Issue",
+    "QA Issue"
+  ];
+
+  const hrCategories = [
+    "HR Issue",
+    "Admin / Ops Issue",
+    "General Feedback"
+  ];
+
+  const infraCategories = [
+    "Asset / Infra Issue",
+    "Platform / Login Issue",
+    "Feature Request"
+  ];
+
+  if (dataCategories.includes(category)) return "Data";
+  if (hrCategories.includes(category)) return "HR";
+  if (infraCategories.includes(category)) return "Infra";
+
+  return null;
+}
+  
 const handleCreateTicket = async (formData: any) => {
   // 1️⃣ Get logged-in auth user
   const {
@@ -135,6 +161,8 @@ const handleCreateTicket = async (formData: any) => {
     " - " +
     (formData.description?.slice(0, 30) || "New Issue");
 
+  const internalType = getInternalType(category); //classification function 
+  
   // 4️⃣ Correct payload
   const payload = {
     title: generatedTitle,
@@ -153,32 +181,7 @@ const handleCreateTicket = async (formData: any) => {
 
   console.log("INSERT PAYLOAD:", payload);
 
-
-  //Classification Function
-  function getInternalType(category: string) {
-  const dataCategories = [
-    "Data / Dataset Issue",
-    "QA Issue"
-  ];
-
-  const hrCategories = [
-    "HR Issue",
-    "Admin / Ops Issue",
-    "General Feedback"
-  ];
-
-  const infraCategories = [
-    "Asset / Infra Issue",
-    "Platform / Login Issue",
-    "Feature Request"
-  ];
-
-  if (dataCategories.includes(category)) return "Data";
-  if (hrCategories.includes(category)) return "HR";
-  if (infraCategories.includes(category)) return "Infra";
-
-  return null;
-}
+  
 
   // 5️⃣ Insert ticket
   const { data, error } = await supabase
