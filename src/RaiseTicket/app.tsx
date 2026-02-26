@@ -52,7 +52,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
-  
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
@@ -199,16 +199,16 @@ const handleCreateTicket = async (formData: any) => {
 
 
 const filteredTickets = useMemo(() => {
-  return tickets.filter((t) => {
+  return tickets.filter(t => {
     const matchesSearch =
       (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType =
-      activeTypeFilter === "ALL" || t.types === activeTypeFilter;
+    const matchesTeam =
+      !selectedTeam || t.type === selectedTeam;
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesTeam;
   });
-}, [tickets, searchQuery, activeTypeFilter]);
+}, [tickets, searchQuery, selectedTeam]);
 
 
   return (
@@ -223,10 +223,30 @@ const filteredTickets = useMemo(() => {
         </div>
 
         <nav className="flex-1 px-3 space-y-1">
-          <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">Teams</div>
-          <NavItem icon={<ClipboardList size={20} />} label="Data Team" />
-          <NavItem icon={<ClipboardList size={20} />} label="HR Ops" />
-          <NavItem icon={<ClipboardList size={20} />} label="IT/Infra" />
+          <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">
+                Teams
+          </div>
+
+          <NavItem
+            icon={<ClipboardList size={20} />}
+    label="Data Team"
+  onClick={() => setSelectedTeam("Data Team")}
+  active={selectedTeam === "Data Team"}
+/>
+
+<NavItem
+  icon={<ClipboardList size={20} />}
+  label="HR Ops"
+  onClick={() => setSelectedTeam("HR Ops")}
+  active={selectedTeam === "HR Ops"}
+/>
+
+<NavItem
+  icon={<ClipboardList size={20} />}
+  label="IT/Infra"
+  onClick={() => setSelectedTeam("IT/Infra")}
+  active={selectedTeam === "IT/Infra"}
+/>
           <NavItem icon={<Kanban size={20} />} label="Board" active={activeView === 'board' && viewMode === 'kanban'} onClick={() => { setActiveView('board'); setViewMode('kanban'); }} />
           <NavItem icon={<List size={20} />} label="All Issues" active={activeView === 'board' && viewMode === 'list'} onClick={() => {
             setActiveView('board'); setViewMode('list');
