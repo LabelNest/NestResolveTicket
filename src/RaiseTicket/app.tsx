@@ -51,7 +51,8 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'board' | 'settings'>('board');
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-
+  const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
+  
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
@@ -196,13 +197,18 @@ const handleCreateTicket = async (formData: any) => {
   }
 };
 
-  
 
 const filteredTickets = useMemo(() => {
-  return tickets.filter(t =>
-    (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
-}, [tickets, searchQuery]);
+  return tickets.filter((t) => {
+    const matchesSearch =
+      (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesType =
+      activeTypeFilter === "ALL" || t.types === activeTypeFilter;
+
+    return matchesSearch && matchesType;
+  });
+}, [tickets, searchQuery, activeTypeFilter]);
 
 
   return (
@@ -217,14 +223,14 @@ const filteredTickets = useMemo(() => {
         </div>
 
         <nav className="flex-1 px-3 space-y-1">
-          <NavItem icon={<Kanban size={20} />} label="Board" active={activeView === 'board' && viewMode === 'kanban'} onClick={() => { setActiveView('board'); setViewMode('kanban'); }} />
-          <NavItem icon={<List size={20} />} label="All Issues" active={activeView === 'board' && viewMode === 'list'} onClick={() => {
-            setActiveView('board'); setViewMode('list');
-          }} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">Teams</div>
           <NavItem icon={<ClipboardList size={20} />} label="Data Team" />
           <NavItem icon={<ClipboardList size={20} />} label="HR Ops" />
           <NavItem icon={<ClipboardList size={20} />} label="IT/Infra" />
+          <NavItem icon={<Kanban size={20} />} label="Board" active={activeView === 'board' && viewMode === 'kanban'} onClick={() => { setActiveView('board'); setViewMode('kanban'); }} />
+          <NavItem icon={<List size={20} />} label="All Issues" active={activeView === 'board' && viewMode === 'list'} onClick={() => {
+            setActiveView('board'); setViewMode('list');
+          }} />
         </nav>
 
         
