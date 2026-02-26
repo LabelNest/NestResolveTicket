@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // admin navigate
 import { Shield } from "lucide-react";
+import { BrowserRouter, Routes, Route } from "react-router-dom"; //admin navigate
 
 import { supabase } from '@/lib/supabaseClient';
 import {
