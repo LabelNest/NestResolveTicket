@@ -110,27 +110,14 @@ useEffect(() => {
   };
 
 //classification function
- function getInternalType(category: string) {
-  const dataCategories = [
-    "Data / Dataset Issue",
-    "QA Issue"
-  ];
+function getInternalType(category: string) {
+  if (!category) return null;
 
-  const hrCategories = [
-    "HR Issue",
-    "Admin / Ops Issue",
-    "General Feedback"
-  ];
+  const lower = category.toLowerCase();
 
-  const infraCategories = [
-    "Asset / Infra Issue",
-    "Platform / Login Issue",
-    "Feature Request"
-  ];
-
-  if (dataCategories.includes(category)) return "Data";
-  if (hrCategories.includes(category)) return "HR";
-  if (infraCategories.includes(category)) return "Infra";
+  if (lower.includes("data") || lower.includes("qa")) return "Data";
+  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback")) return "HR";
+  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature")) return "Infra";
 
   return null;
 }
@@ -162,8 +149,8 @@ const handleCreateTicket = async (formData: any) => {
     (formData.description?.slice(0, 30) || "New Issue");
 
   //classification
-  const category = selectedType?.ticket_type;
-  const internalType = getInternalType(category); 
+const category = selectedType?.label;
+const internalType = getInternalType(category ?? "");
   
   // 4️⃣ Correct payload
   const payload = {
