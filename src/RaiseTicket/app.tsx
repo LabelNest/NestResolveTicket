@@ -115,9 +115,14 @@ function getInternalType(category: string) {
 
   const lower = category.toLowerCase();
 
-  if (lower.includes("data") || lower.includes("qa")) return "Data";
-  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback")) return "HR";
-  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature")) return "Infra";
+  if (lower.includes("data") || lower.includes("qa"))
+    return "Data Team";
+
+  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback"))
+    return "HR Ops";
+
+  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature"))
+    return "IT/Infra";
 
   return null;
 }
@@ -152,8 +157,6 @@ const handleCreateTicket = async (formData: any) => {
   const category = selectedType?.label;
   const internalType = getInternalType(category ?? "");
 
-  console.log("CATEGORY:", category);
-  console.log("INTERNAL TYPE:", internalType);
   
   // 4️⃣ Correct payload
   const payload = {
