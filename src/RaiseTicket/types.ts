@@ -57,6 +57,7 @@ export interface Ticket {
   entity_id: string | null;
   field_name: string | null;
   confidence_score: number | null;
+  types: string | null;
 }
 
 
