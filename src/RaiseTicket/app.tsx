@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from "react-router-dom"; // admin navigate
 import { Shield } from "lucide-react";
-import { BrowserRouter, Routes, Route } from "react-router-dom"; //admin navigate
 
 import { supabase } from '@/lib/supabaseClient';
 import {
@@ -35,9 +34,6 @@ import {
 } from 'lucide-react';
 import TicketList from './ticketlist';
 import AdminApprovals from "@/pages/AdminApprovals";
-
-//for switch to admin
-<Route path="/admin-approvals" element={<AdminApprovals />} />
 
 
 // --- Types for internal state ---
@@ -238,7 +234,7 @@ const filteredTickets = useMemo(() => {
   {/* Switch to Admin Button */}
   {isAdmin && (
     <button
-      onClick={() => navigate("/admin-approvals")}
+      onClick={() => navigate("/approvals")}
       className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
     >
       <Shield size={20} />
