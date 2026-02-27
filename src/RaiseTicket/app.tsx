@@ -53,6 +53,7 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedView, setSelectedView] = useState<"board" | "all">("board");
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
@@ -199,18 +200,13 @@ const handleCreateTicket = async (formData: any) => {
 
 
 const filteredTickets = useMemo(() => {
-  return tickets.filter(t => {
-    const matchesSearch =
-      (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesTeam =
-      !selectedTeam || t.type === selectedTeam;
-
-    return matchesSearch && matchesTeam;
-  });
+  return tickets.filter(t =>
+    (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (!selectedTeam || t.team === selectedTeam)
+  );
 }, [tickets, searchQuery, selectedTeam]);
 
-
+  
   return (
     <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
       {/* Sidebar */}
