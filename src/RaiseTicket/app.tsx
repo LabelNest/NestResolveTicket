@@ -227,9 +227,9 @@ const filteredTickets = useMemo(() => {
                 Teams
           </div>
 
-          <NavItem
-            icon={<ClipboardList size={20} />}
-    label="Data Team"
+  <NavItem
+  icon={<ClipboardList size={20} />}
+  label="Data Team"
   onClick={() => setSelectedTeam("Data Team")}
   active={selectedTeam === "Data Team"}
 />
@@ -247,11 +247,20 @@ const filteredTickets = useMemo(() => {
   onClick={() => setSelectedTeam("IT/Infra")}
   active={selectedTeam === "IT/Infra"}
 />
-          <NavItem icon={<Kanban size={20} />} label="Board" active={activeView === 'board' && viewMode === 'kanban'} onClick={() => { setActiveView('board'); setViewMode('kanban'); }} />
-          <NavItem icon={<List size={20} />} label="All Issues" active={activeView === 'board' && viewMode === 'list'} onClick={() => {
-            setActiveView('board'); setViewMode('list');
-          }} />
-        </nav>
+<NavItem
+  icon={<Kanban size={20} />}
+  label="Board"
+  active={viewMode === 'kanban'}
+  onClick={() => setViewMode('kanban')}
+/>
+
+<NavItem
+  icon={<List size={20} />}
+  label="All Issues"
+  active={viewMode === 'list'}
+  onClick={() => setViewMode('list')}
+/>
+</nav>
 
         
 {/* Bottom Section */}
