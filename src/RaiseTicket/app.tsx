@@ -198,11 +198,12 @@ const handleCreateTicket = async (formData: any) => {
   }
 };
 
-
 const filteredTickets = useMemo(() => {
   return tickets.filter(t =>
-    (t.title ?? "").toLowerCase().includes(searchQuery.toLowerCase()) &&
-    (!selectedTeam || t.team === selectedTeam)
+    (t.title ?? "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) &&
+    (!selectedTeam || t.types === selectedTeam)
   );
 }, [tickets, searchQuery, selectedTeam]);
 
