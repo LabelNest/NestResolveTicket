@@ -54,60 +54,83 @@ const App: React.FC = () => {
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
+  const [selectedTeam, setSelectedTeam] = useState("Data Team");
+
   
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+      // 1️⃣ Get session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    if (!session) {
-      console.error("No active session");
-      return;
-    }
+      if (!session) {
+        console.error("No active session");
+        return;
+      }
 
-    console.log("AUTH USER:", session.user.id);
+      console.log("AUTH USER:", session.user.id);
+      console.log("Selected Team:", selectedTeam);
 
-    const { data: admin } = await supabase
-      .from("nr_admins")
-      .select("nr_id")
-      .eq("nr_email", session.user.email)
-      .maybeSingle();
+      // 2️⃣ Check if user is admin
+      const { data: admin, error: adminError } = await supabase
+        .from("nr_admins")
+        .select("nr_id")
+        .eq("nr_email", session.user.email)
+        .maybeSingle();
 
-    if (admin) {
-      setIsAdmin(true);
-    }
+      if (adminError) {
+        console.error("Admin Check Error:", adminError);
+      }
 
-    // 🔥 Dynamic ticket loading
-    let query;
+      if (admin) {
+        setIsAdmin(true);
+      }
 
-    if (selectedTeam === "External Issues") {
-      query = supabase
-        .from("nr_resolve_tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
-    } else {
-      query = supabase
-        .from("nr_tickets_internal")
-        .select(`
-          *,
-          user:nr_users!nr_tickets_demo_created_by_fkey (
-            nr_name,
-            nr_email
-          )
-        `)
-        .order("created_at", { ascending: false });
-    }
+      // 3️⃣ Load tickets dynamically
+      let data = null;
+      let error = null;
 
-    const { data, error } = await query;
+      if (selectedTeam === "External Issues") {
+        // 🔥 External Tickets
+        ({ data, error } = await supabase
+          .from("nr_resolve_tickets")
+          .select("*")
+          .order("created_at", { ascending: false }));
+      } else {
+        // 🔥 Internal Tickets (Filtered by Department)
+        ({ data, error } = await supabase
+          .from("nr_tickets_internal")
+          .select(`
+            *,
+            user:nr_users!nr_tickets_demo_created_by_fkey (
+              nr_name,
+              nr_email
+            )
+          `)
+          .eq("department", selectedTeam)
+          .order("created_at", { ascending: false }));
+      }
 
-    if (!error && data) {
-      setTickets(data);
+      if (error) {
+        console.error("Ticket Fetch Error:", error);
+      }
+
+      if (data) {
+        console.log("Tickets Loaded:", data);
+        setTickets(data);
+      }
+    } catch (err) {
+      console.error("Unexpected Error:", err);
     }
   };
 
   initializePage();
 }, [selectedTeam]);
 
+  
 
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
@@ -272,11 +295,14 @@ const filteredTickets = useMemo(() => {
 />
 
 <NavItem
-  icon={<Globe size={20} />}   // ✅ New logo
+  icon={<Globe size={20} />}
   label="External Issues"
-  onClick={() => setSelectedTeam("External Issues")}
+  onClick={() => {
+    setSelectedTeam("External Issues");
+    setView("board");   // Important
+  }}
   active={selectedTeam === "External Issues"}
-/>       
+/>    
 </nav>
 
         
