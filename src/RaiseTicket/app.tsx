@@ -54,7 +54,6 @@ const App: React.FC = () => {
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
-  const [selectedTeam, setSelectedTeam] = useState("Data Team");
 
   
   // Fetch tickets from Supabase on component mount
@@ -71,37 +70,30 @@ useEffect(() => {
         return;
       }
 
-      console.log("AUTH USER:", session.user.id);
-      console.log("Selected Team:", selectedTeam);
-
-      // 2️⃣ Check if user is admin
-      const { data: admin, error: adminError } = await supabase
+      // 2️⃣ Check admin
+      const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
         .eq("nr_email", session.user.email)
         .maybeSingle();
 
-      if (adminError) {
-        console.error("Admin Check Error:", adminError);
-      }
-
       if (admin) {
         setIsAdmin(true);
       }
 
-      // 3️⃣ Load tickets dynamically
-      let data = null;
-      let error = null;
+      // 3️⃣ Ticket Loading Logic
+      let query;
 
       if (selectedTeam === "External Issues") {
         // 🔥 External Tickets
-        ({ data, error } = await supabase
+        query = supabase
           .from("nr_resolve_tickets")
           .select("*")
-          .order("created_at", { ascending: false }));
-      } else {
-        // 🔥 Internal Tickets (Filtered by Department)
-        ({ data, error } = await supabase
+          .order("created_at", { ascending: false });
+
+      } else if (selectedTeam) {
+        // 🔥 Internal filtered by department
+        query = supabase
           .from("nr_tickets_internal")
           .select(`
             *,
@@ -111,17 +103,30 @@ useEffect(() => {
             )
           `)
           .eq("department", selectedTeam)
-          .order("created_at", { ascending: false }));
+          .order("created_at", { ascending: false });
+
+      } else {
+        // 🔥 Default: load all internal tickets
+        query = supabase
+          .from("nr_tickets_internal")
+          .select(`
+            *,
+            user:nr_users!nr_tickets_demo_created_by_fkey (
+              nr_name,
+              nr_email
+            )
+          `)
+          .order("created_at", { ascending: false });
       }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Ticket Fetch Error:", error);
+      } else {
+        setTickets(data || []);
       }
 
-      if (data) {
-        console.log("Tickets Loaded:", data);
-        setTickets(data);
-      }
     } catch (err) {
       console.error("Unexpected Error:", err);
     }
@@ -129,7 +134,6 @@ useEffect(() => {
 
   initializePage();
 }, [selectedTeam]);
-
   
 
   // --- Logic ---
