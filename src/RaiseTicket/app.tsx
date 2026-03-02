@@ -58,7 +58,6 @@ const App: React.FC = () => {
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
-    // 1️⃣ Get session
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
@@ -68,7 +67,6 @@ useEffect(() => {
 
     console.log("AUTH USER:", session.user.id);
 
-    // 2️⃣ Check if user is admin
     const { data: admin } = await supabase
       .from("nr_admins")
       .select("nr_id")
@@ -79,18 +77,28 @@ useEffect(() => {
       setIsAdmin(true);
     }
 
-    // 3️⃣ Load tickets
-    const { data, error } = await supabase
-      .from("nr_tickets_internal")
-      .select(`
-        *,
-        user:nr_users!nr_tickets_demo_created_by_fkey (
-          nr_name,
-          nr_email
-        )
-      `)
-      .order("created_at", { ascending: false });
+    // 🔥 Dynamic ticket loading
+    let query;
 
+    if (selectedTeam === "External") {
+      query = supabase
+        .from("nr_resolve_tickets")
+        .select("*")
+        .order("created_at", { ascending: false });
+    } else {
+      query = supabase
+        .from("nr_tickets_internal")
+        .select(`
+          *,
+          user:nr_users!nr_tickets_demo_created_by_fkey (
+            nr_name,
+            nr_email
+          )
+        `)
+        .order("created_at", { ascending: false });
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       setTickets(data);
@@ -98,8 +106,7 @@ useEffect(() => {
   };
 
   initializePage();
-}, []);
-
+}, [selectedTeam]);
 
 
   // --- Logic ---
@@ -263,6 +270,13 @@ const filteredTickets = useMemo(() => {
     setViewMode('list');
   }}
 />
+
+<NavItem
+  icon={<ClipboardList size={20} />}
+  label="External Issues"
+  onClick={() => setSelectedTeam("External")}
+  active={selectedTeam === "External"}
+/>          
 </nav>
 
         
