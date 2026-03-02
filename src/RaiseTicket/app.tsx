@@ -52,7 +52,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string>("Data Team");
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
 
   
@@ -60,7 +60,6 @@ const App: React.FC = () => {
 useEffect(() => {
   const initializePage = async () => {
     try {
-      // 1️⃣ Get session
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -70,29 +69,27 @@ useEffect(() => {
         return;
       }
 
-      // 2️⃣ Check admin
+      // Admin check
       const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
         .eq("nr_email", session.user.email)
         .maybeSingle();
 
-      if (admin) {
-        setIsAdmin(true);
-      }
+      setIsAdmin(!!admin);
 
-      // 3️⃣ Ticket Loading Logic
       let query;
 
+      // ✅ EXTERNAL
       if (selectedTeam === "External Issues") {
-        // 🔥 External Tickets
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
-      } else if (selectedTeam) {
-        // 🔥 Internal filtered by department
+      }
+      // ✅ INTERNAL (filtered)
+      else {
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -104,19 +101,6 @@ useEffect(() => {
           `)
           .eq("department", selectedTeam)
           .order("created_at", { ascending: false });
-
-      } else {
-        // 🔥 Default: load all internal tickets
-        query = supabase
-          .from("nr_tickets_internal")
-          .select(`
-            *,
-            user:nr_users!nr_tickets_demo_created_by_fkey (
-              nr_name,
-              nr_email
-            )
-          `)
-          .order("created_at", { ascending: false });
       }
 
       const { data, error } = await query;
@@ -124,6 +108,7 @@ useEffect(() => {
       if (error) {
         console.error("Ticket Fetch Error:", error);
       } else {
+        console.log("Loaded tickets:", data); // 👈 Debug
         setTickets(data || []);
       }
 
@@ -253,60 +238,60 @@ const filteredTickets = useMemo(() => {
           <span className="font-bold text-xl tracking-tight">NestResolve</span>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1">
-          <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">
-                Teams
-          </div>
+<nav className="flex-1 px-3 space-y-1">
+  <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">
+    Teams
+  </div>
 
   <NavItem
   icon={<ClipboardList size={20} />}
   label="Data Team"
   onClick={() => setSelectedTeam("Data Team")}
   active={selectedTeam === "Data Team"}
-/>
+  />
 
-<NavItem
+  <NavItem
   icon={<ClipboardList size={20} />}
   label="HR Ops"
   onClick={() => setSelectedTeam("HR Ops")}
   active={selectedTeam === "HR Ops"}
-/>
+  />
 
-<NavItem
+  <NavItem
   icon={<ClipboardList size={20} />}
   label="IT/Infra"
   onClick={() => setSelectedTeam("IT/Infra")}
   active={selectedTeam === "IT/Infra"}
-/>
-<NavItem
+  />
+
+  <NavItem
   icon={<Kanban size={20} />}
   label="Board"
-  active={!selectedTeam && viewMode === 'kanban'}
+  active={viewMode === 'kanban'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('kanban');
-  }}
-/>
+    }}
+  />
 
-<NavItem
+  <NavItem
   icon={<List size={20} />}
   label="All Issues"
-  active={!selectedTeam && viewMode === 'list'}
+  active={viewMode === 'list'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('list');
-  }}
-/>
+    }}
+  />
 
-<NavItem
+  <NavItem
   icon={<Globe size={20} />}
   label="External Issues"
   onClick={() => {
     setSelectedTeam("External Issues");
     setViewMode('kanban');   // Important
-  }}
+    }}
   active={selectedTeam === "External Issues"}
-/>    
+  />
+  
 </nav>
 
         
