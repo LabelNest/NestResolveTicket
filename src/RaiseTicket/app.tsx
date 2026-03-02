@@ -60,39 +60,29 @@ const App: React.FC = () => {
 useEffect(() => {
   const initializePage = async () => {
     try {
-      // 1️⃣ Get session
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        console.error("No active session");
-        return;
-      }
+      if (!session) return;
 
-      // 2️⃣ Check admin
       const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
         .eq("nr_email", session.user.email)
         .maybeSingle();
 
-      if (admin) {
-        setIsAdmin(true);
-      }
+      if (admin) setIsAdmin(true);
 
-      // 3️⃣ Ticket Loading Logic
       let query;
 
       if (selectedTeam === "External Issues") {
-        // 🔥 External Tickets
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
       } else if (selectedTeam) {
-        // 🔥 Internal filtered by department
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -106,36 +96,24 @@ useEffect(() => {
           .order("created_at", { ascending: false });
 
       } else {
-        // 🔥 Default: load all internal tickets
-        query = supabase
-          .from("nr_tickets_internal")
-          .select(`
-            *,
-            user:nr_users!nr_tickets_demo_created_by_fkey (
-              nr_name,
-              nr_email
-            )
-          `)
-          .order("created_at", { ascending: false });
+        // ✅ DO NOT auto-load internal tickets
+        setTickets([]);
+        return;
       }
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error("Ticket Fetch Error:", error);
-      } else {
+      if (!error) {
         setTickets(data || []);
       }
 
     } catch (err) {
-      console.error("Unexpected Error:", err);
+      console.error(err);
     }
   };
 
   initializePage();
 }, [selectedTeam]);
-
-
 
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
