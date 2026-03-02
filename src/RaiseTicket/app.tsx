@@ -52,7 +52,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
-  const [selectedTeam, setSelectedTeam] = useState<string>("Data Team");
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
 
   
@@ -64,32 +64,25 @@ useEffect(() => {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        console.error("No active session");
-        return;
-      }
+      if (!session) return;
 
-      // Admin check
       const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
         .eq("nr_email", session.user.email)
         .maybeSingle();
 
-      setIsAdmin(!!admin);
+      if (admin) setIsAdmin(true);
 
       let query;
 
-      // ✅ EXTERNAL
       if (selectedTeam === "External Issues") {
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
-      }
-      // ✅ INTERNAL (filtered)
-      else {
+      } else if (selectedTeam) {
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -101,26 +94,24 @@ useEffect(() => {
           `)
           .eq("department", selectedTeam)
           .order("created_at", { ascending: false });
+
+      } else {
+        // 🚨 DO NOTHING if null
+        setTickets([]);
+        return;
       }
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error("Ticket Fetch Error:", error);
-      } else {
-        console.log("Loaded tickets:", data); // 👈 Debug
-        setTickets(data || []);
-      }
+      if (!error) setTickets(data || []);
 
     } catch (err) {
-      console.error("Unexpected Error:", err);
+      console.error(err);
     }
   };
 
   initializePage();
 }, [selectedTeam]);
-  
-
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
     setModalState('selector');
