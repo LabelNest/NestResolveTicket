@@ -274,8 +274,8 @@ const filteredTickets = useMemo(() => {
 <NavItem
   icon={<Globe size={20} />}   // ✅ New logo
   label="External Issues"
-  onClick={() => setSelectedTeam("External")}
-  active={selectedTeam === "External"}
+  onClick={() => setSelectedTeam("External Issues")}
+  active={selectedTeam === "External Issues"}
 />       
 </nav>
 
