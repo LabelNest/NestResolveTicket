@@ -57,32 +57,43 @@ const App: React.FC = () => {
 
   
   // Fetch tickets from Supabase on component mount
+use effect 
 useEffect(() => {
   const initializePage = async () => {
     try {
+      // 1️⃣ Get session
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) return;
+      if (!session) {
+        console.error("No active session");
+        return;
+      }
 
+      // 2️⃣ Check admin
       const { data: admin } = await supabase
         .from("nr_admins")
         .select("nr_id")
         .eq("nr_email", session.user.email)
         .maybeSingle();
 
-      if (admin) setIsAdmin(true);
+      if (admin) {
+        setIsAdmin(true);
+      }
 
+      // 3️⃣ Ticket Loading Logic
       let query;
 
       if (selectedTeam === "External Issues") {
+        // 🔥 External Tickets
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
       } else if (selectedTeam) {
+        // 🔥 Internal filtered by department
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -96,22 +107,37 @@ useEffect(() => {
           .order("created_at", { ascending: false });
 
       } else {
-        // 🚨 DO NOTHING if null
-        setTickets([]);
-        return;
+        // 🔥 Default: load all internal tickets
+        query = supabase
+          .from("nr_tickets_internal")
+          .select(`
+            *,
+            user:nr_users!nr_tickets_demo_created_by_fkey (
+              nr_name,
+              nr_email
+            )
+          `)
+          .order("created_at", { ascending: false });
       }
 
       const { data, error } = await query;
 
-      if (!error) setTickets(data || []);
+      if (error) {
+        console.error("Ticket Fetch Error:", error);
+      } else {
+        setTickets(data || []);
+      }
 
     } catch (err) {
-      console.error(err);
+      console.error("Unexpected Error:", err);
     }
   };
 
   initializePage();
 }, [selectedTeam]);
+
+
+
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
     setModalState('selector');
@@ -254,12 +280,12 @@ const filteredTickets = useMemo(() => {
   onClick={() => setSelectedTeam("IT/Infra")}
   active={selectedTeam === "IT/Infra"}
   />
-
   <NavItem
   icon={<Kanban size={20} />}
   label="Board"
-  active={viewMode === 'kanban'}
+  active={!selectedTeam && viewMode === 'kanban'}
   onClick={() => {
+    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('kanban');
     }}
   />
@@ -267,8 +293,9 @@ const filteredTickets = useMemo(() => {
   <NavItem
   icon={<List size={20} />}
   label="All Issues"
-  active={viewMode === 'list'}
+  active={!selectedTeam && viewMode === 'list'}
   onClick={() => {
+    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('list');
     }}
   />
@@ -281,9 +308,8 @@ const filteredTickets = useMemo(() => {
     setViewMode('kanban');   // Important
     }}
   active={selectedTeam === "External Issues"}
-  />
-  
-</nav>
+  />    
+</nav>	
 
         
 {/* Bottom Section */}
