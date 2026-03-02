@@ -257,12 +257,12 @@ const filteredTickets = useMemo(() => {
   onClick={() => setSelectedTeam("IT/Infra")}
   active={selectedTeam === "IT/Infra"}
   />
+  
   <NavItem
   icon={<Kanban size={20} />}
   label="Board"
-  active={!selectedTeam && viewMode === 'kanban'}
+  active={viewMode === 'kanban'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('kanban');
     }}
   />
@@ -270,9 +270,8 @@ const filteredTickets = useMemo(() => {
   <NavItem
   icon={<List size={20} />}
   label="All Issues"
-  active={!selectedTeam && viewMode === 'list'}
+  active={viewMode === 'list'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
     setViewMode('list');
     }}
   />
