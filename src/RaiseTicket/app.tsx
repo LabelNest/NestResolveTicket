@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import TicketList from './ticketlist';
 import AdminApprovals from "@/pages/AdminApprovals";
-
+import { ClipboardList, Globe } from "lucide-react"; // for external logo
 
 // --- Types for internal state ---
 type ModalState = 'closed' | 'selector' | 'form';
@@ -80,7 +80,7 @@ useEffect(() => {
     // 🔥 Dynamic ticket loading
     let query;
 
-    if (selectedTeam === "External") {
+    if (selectedTeam === "External Issues") {
       query = supabase
         .from("nr_resolve_tickets")
         .select("*")
@@ -272,11 +272,11 @@ const filteredTickets = useMemo(() => {
 />
 
 <NavItem
-  icon={<ClipboardList size={20} />}
+  icon={<Globe size={20} />}   // ✅ New logo
   label="External Issues"
   onClick={() => setSelectedTeam("External")}
   active={selectedTeam === "External"}
-/>          
+/>       
 </nav>
 
         
