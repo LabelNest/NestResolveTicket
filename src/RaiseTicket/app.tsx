@@ -148,7 +148,9 @@ useEffect(() => {
   };
 
 //classification function
-function getInternalType(category: string) {
+function getInternalType(category: string, isExternal: boolean) {
+  if (isExternal) return "External Issues";
+
   if (!category) return null;
 
   const lower = category.toLowerCase();
