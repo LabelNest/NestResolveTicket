@@ -57,7 +57,6 @@ const App: React.FC = () => {
 
   
   // Fetch tickets from Supabase on component mount
-use effect 
 useEffect(() => {
   const initializePage = async () => {
     try {
