@@ -57,23 +57,68 @@ const App: React.FC = () => {
 
 
 
-  async function loadTickets(selectedTeam: string | null) {
-  try {
-    // External only
-    if (selectedTeam === "External Issues") {
-      const { data, error } = await supabase
-        .from("nr_resolve_tickets")
-        .select("*")
-        .order("created_at", { ascending: false });
+  useEffect(() => {
+  const initializePage = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (error) throw error;
-      return data || [];
-    }
+      if (!session) {
+        console.error("No active session");
+        return;
+      }
 
-    // Internal filtered
-    if (selectedTeam) {
-      const departments = mapTeamToDepartments(selectedTeam);
+      const { data: admin } = await supabase
+        .from("nr_admins")
+        .select("nr_id")
+        .eq("nr_email", session.user.email)
+        .maybeSingle();
 
+      if (admin) setIsAdmin(true);
+
+      // 🔹 External Issues
+      if (selectedTeam === "External Issues") {
+        const { data, error } = await supabase
+          .from("nr_resolve_tickets")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("External fetch error:", error);
+        } else {
+          setTickets(data || []);
+        }
+
+        return;
+      }
+
+      // 🔹 Internal team filtering
+      if (selectedTeam) {
+        const departments = mapTeamToDepartments(selectedTeam);
+
+        const { data, error } = await supabase
+          .from("nr_tickets_internal")
+          .select(`
+            *,
+            user:nr_users!nr_tickets_demo_created_by_fkey (
+              nr_name,
+              nr_email
+            )
+          `)
+          .in("department", departments)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Internal team fetch error:", error);
+        } else {
+          setTickets(data || []);
+        }
+
+        return;
+      }
+
+      // 🔹 ALL ISSUES / BOARD → only INTERNAL tickets
       const { data, error } = await supabase
         .from("nr_tickets_internal")
         .select(`
@@ -83,71 +128,22 @@ const App: React.FC = () => {
             nr_email
           )
         `)
-        .in("department", departments)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error("All tickets fetch error:", error);
+      } else {
+        setTickets(data || []);
+      }
+
+    } catch (err) {
+      console.error("Unexpected Error:", err);
     }
-
-    // ALL ISSUES (internal + external)
-    const [internal, external] = await Promise.all([
-      supabase
-        .from("nr_tickets_internal")
-        .select(`
-          *,
-          user:nr_users!nr_tickets_demo_created_by_fkey (
-            nr_name,
-            nr_email
-          )
-        `),
-
-      supabase
-        .from("nr_resolve_tickets")
-        .select("*")
-    ]);
-
-    const merged = [
-      ...(internal.data || []).map(t => ({ ...t, source: "internal" })),
-      ...(external.data || []).map(t => ({ ...t, source: "external" })),
-    ].sort(
-      (a: any, b: any) =>
-        new Date(b.created_at).getTime() -
-        new Date(a.created_at).getTime()
-    );
-
-    return merged;
-
-  } catch (err) {
-    console.error("Ticket load error:", err);
-    return [];
-  }
-}
-  // Fetch tickets from Supabase on component mount
-useEffect(() => {
-  const initializePage = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) return;
-
-    const { data: admin } = await supabase
-      .from("nr_admins")
-      .select("nr_id")
-      .eq("nr_email", session.user.email)
-      .maybeSingle();
-
-    if (admin) setIsAdmin(true);
-
-    const loadedTickets = await loadTickets(selectedTeam);
-    setTickets(loadedTickets);
   };
 
   initializePage();
 }, [selectedTeam]);
   
-
 
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
