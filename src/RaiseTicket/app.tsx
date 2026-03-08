@@ -55,90 +55,98 @@ const App: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
 
-  
+
+
+  async function loadTickets(selectedTeam: string | null) {
+  try {
+    // External only
+    if (selectedTeam === "External Issues") {
+      const { data, error } = await supabase
+        .from("nr_resolve_tickets")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+
+    // Internal filtered
+    if (selectedTeam) {
+      const departments = mapTeamToDepartments(selectedTeam);
+
+      const { data, error } = await supabase
+        .from("nr_tickets_internal")
+        .select(`
+          *,
+          user:nr_users!nr_tickets_demo_created_by_fkey (
+            nr_name,
+            nr_email
+          )
+        `)
+        .in("department", departments)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+
+    // ALL ISSUES (internal + external)
+    const [internal, external] = await Promise.all([
+      supabase
+        .from("nr_tickets_internal")
+        .select(`
+          *,
+          user:nr_users!nr_tickets_demo_created_by_fkey (
+            nr_name,
+            nr_email
+          )
+        `),
+
+      supabase
+        .from("nr_resolve_tickets")
+        .select("*")
+    ]);
+
+    const merged = [
+      ...(internal.data || []).map(t => ({ ...t, source: "internal" })),
+      ...(external.data || []).map(t => ({ ...t, source: "external" })),
+    ].sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    );
+
+    return merged;
+
+  } catch (err) {
+    console.error("Ticket load error:", err);
+    return [];
+  }
+}
   // Fetch tickets from Supabase on component mount
 useEffect(() => {
   const initializePage = async () => {
-    try {
-      // 1️⃣ Get session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      if (!session) {
-        console.error("No active session");
-        return;
-      }
+    if (!session) return;
 
-      // 2️⃣ Check admin
-      const { data: admin } = await supabase
-        .from("nr_admins")
-        .select("nr_id")
-        .eq("nr_email", session.user.email)
-        .maybeSingle();
+    const { data: admin } = await supabase
+      .from("nr_admins")
+      .select("nr_id")
+      .eq("nr_email", session.user.email)
+      .maybeSingle();
 
-      if (admin) {
-        setIsAdmin(true);
-      }
+    if (admin) setIsAdmin(true);
 
-      let query;
-
-      // 3️⃣ External tickets
-      if (selectedTeam === "External Issues") {
-        query = supabase
-          .from("nr_resolve_tickets")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-      }
-
-      // 4️⃣ Internal team filtering
-      else if (selectedTeam) {
-        const departments = mapTeamToDepartments(selectedTeam);
-
-        query = supabase
-          .from("nr_tickets_internal")
-          .select(`
-            *,
-            user:nr_users!nr_tickets_demo_created_by_fkey (
-              nr_name,
-              nr_email
-            )
-          `)
-          .in("department", departments)
-          .order("created_at", { ascending: false });
-
-      }
-
-      // 5️⃣ Default load all internal
-      else {
-        query = supabase
-          .from("nr_tickets_internal")
-          .select(`
-            *,
-            user:nr_users!nr_tickets_demo_created_by_fkey (
-              nr_name,
-              nr_email
-            )
-          `)
-          .order("created_at", { ascending: false });
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Ticket Fetch Error:", error);
-      } else {
-        setTickets(data || []);
-      }
-
-    } catch (err) {
-      console.error("Unexpected Error:", err);
-    }
+    const loadedTickets = await loadTickets(selectedTeam);
+    setTickets(loadedTickets);
   };
 
   initializePage();
 }, [selectedTeam]);
+  
 
 
   // --- Logic ---
