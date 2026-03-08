@@ -81,18 +81,21 @@ useEffect(() => {
         setIsAdmin(true);
       }
 
-      // 3️⃣ Ticket loading logic
       let query;
 
+      // 3️⃣ External tickets
       if (selectedTeam === "External Issues") {
-        // External tickets
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
-      } else if (selectedTeam) {
-        // Internal tickets filtered by department (case-insensitive)
+      }
+
+      // 4️⃣ Internal team filtering
+      else if (selectedTeam) {
+        const departments = mapTeamToDepartments(selectedTeam);
+
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -102,11 +105,13 @@ useEffect(() => {
               nr_email
             )
           `)
-          .ilike("department", selectedTeam)   // ✅ changed from .eq
+          .in("department", departments)
           .order("created_at", { ascending: false });
 
-      } else {
-        // Default: load all internal tickets
+      }
+
+      // 5️⃣ Default load all internal
+      else {
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -134,7 +139,6 @@ useEffect(() => {
 
   initializePage();
 }, [selectedTeam]);
-  
 
 
   // --- Logic ---
@@ -148,17 +152,20 @@ useEffect(() => {
   };
 
 //classification function
-function getInternalType(category: string, isExternal: boolean) {
-  if (isExternal) return "External Issues";
-  if (!category) return null;
+function mapTeamToDepartments(team: string) {
+  switch (team) {
+    case "Data Team":
+      return ["Data Engineering", "QA/QC"];
 
-  const lower = category.toLowerCase();
+    case "HR Ops":
+      return ["HR Ops", "Operations"];
 
-  if (lower.includes("data") || lower.includes("qa")) return "Data Team";
-  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback")) return "HR Ops";
-  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature")) return "IT/Infra";
+    case "IT/Infra":
+      return ["IT / Infra", "Product Support", "Product Roadmap"];
 
-  return "Data Team"; // fallback
+    default:
+      return [];
+  }
 }
 
 
