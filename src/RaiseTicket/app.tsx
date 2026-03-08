@@ -81,18 +81,18 @@ useEffect(() => {
         setIsAdmin(true);
       }
 
-      // 3️⃣ Ticket Loading Logic
+      // 3️⃣ Ticket loading logic
       let query;
 
       if (selectedTeam === "External Issues") {
-        // 🔥 External Tickets
+        // External tickets
         query = supabase
           .from("nr_resolve_tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
       } else if (selectedTeam) {
-        // 🔥 Internal filtered by department
+        // Internal tickets filtered by department (case-insensitive)
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -102,11 +102,11 @@ useEffect(() => {
               nr_email
             )
           `)
-          .eq("department", selectedTeam)
+          .ilike("department", selectedTeam)   // ✅ changed from .eq
           .order("created_at", { ascending: false });
 
       } else {
-        // 🔥 Default: load all internal tickets
+        // Default: load all internal tickets
         query = supabase
           .from("nr_tickets_internal")
           .select(`
@@ -150,22 +150,18 @@ useEffect(() => {
 //classification function
 function getInternalType(category: string, isExternal: boolean) {
   if (isExternal) return "External Issues";
-
   if (!category) return null;
 
   const lower = category.toLowerCase();
 
-  if (lower.includes("data") || lower.includes("qa"))
-    return "Data Team";
+  if (lower.includes("data") || lower.includes("qa")) return "Data Team";
+  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback")) return "HR Ops";
+  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature")) return "IT/Infra";
 
-  if (lower.includes("hr") || lower.includes("admin") || lower.includes("feedback"))
-    return "HR Ops";
-
-  if (lower.includes("infra") || lower.includes("platform") || lower.includes("feature"))
-    return "IT/Infra";
-
-  return null;
+  return "Data Team"; // fallback
 }
+
+
   
 const handleCreateTicket = async (formData: any) => {
   // 1️⃣ Get logged-in auth user
@@ -239,10 +235,9 @@ const filteredTickets = useMemo(() => {
   return tickets.filter(t =>
     (t.title ?? "")
       .toLowerCase()
-      .includes(searchQuery.toLowerCase()) &&
-    (!selectedTeam || t.types === selectedTeam)
+      .includes(searchQuery.toLowerCase())
   );
-}, [tickets, searchQuery, selectedTeam]);
+}, [tickets, searchQuery]);
 
   
   return (
