@@ -56,18 +56,19 @@ const App: React.FC = () => {
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
 
 
-
+//Ticket initializaing
   useEffect(() => {
   const initializePage = async () => {
     try {
+
+      // ✅ Clear old tickets immediately
+      setTickets([]);
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        console.error("No active session");
-        return;
-      }
+      if (!session) return;
 
       const { data: admin } = await supabase
         .from("nr_admins")
@@ -84,12 +85,7 @@ const App: React.FC = () => {
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("External fetch error:", error);
-        } else {
-          setTickets(data || []);
-        }
-
+        if (!error) setTickets(data || []);
         return;
       }
 
@@ -109,16 +105,11 @@ const App: React.FC = () => {
           .in("department", departments)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Internal team fetch error:", error);
-        } else {
-          setTickets(data || []);
-        }
-
+        if (!error) setTickets(data || []);
         return;
       }
 
-      // 🔹 ALL ISSUES / BOARD → only INTERNAL tickets
+      // 🔹 ALL ISSUES / BOARD
       const { data, error } = await supabase
         .from("nr_tickets_internal")
         .select(`
@@ -130,14 +121,10 @@ const App: React.FC = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("All tickets fetch error:", error);
-      } else {
-        setTickets(data || []);
-      }
+      if (!error) setTickets(data || []);
 
     } catch (err) {
-      console.error("Unexpected Error:", err);
+      console.error(err);
     }
   };
 
@@ -154,6 +141,8 @@ const App: React.FC = () => {
     setSelectedType(type);
     setModalState('form');
   };
+
+  
 
 //classification function
 function mapTeamToDepartments(team: string) {
