@@ -315,7 +315,7 @@ const filteredTickets = useMemo(() => {
   onClick={() => {
     setSelectedTeam("External Issues");
     setViewMode('kanban');
-    setActiveView("External Issues");
+    setActiveView("board");
   }}
   active={selectedTeam === "External Issues"}
 />
