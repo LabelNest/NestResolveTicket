@@ -256,55 +256,70 @@ const filteredTickets = useMemo(() => {
     Teams
   </div>
 
-  <NavItem
+<NavItem
   icon={<ClipboardList size={20} />}
   label="Data Team"
-  onClick={() => setSelectedTeam("Data Team")}
+  onClick={() => {
+    setSelectedTeam("Data Team");
+    setActiveView("board");
+  }}
   active={selectedTeam === "Data Team"}
-  />
+/>
 
-  <NavItem
+<NavItem
   icon={<ClipboardList size={20} />}
   label="HR Ops"
-  onClick={() => setSelectedTeam("HR Ops")}
+  onClick={() => {
+    setSelectedTeam("HR Ops");
+    setActiveView("board");
+  }}
   active={selectedTeam === "HR Ops"}
-  />
+/>
 
-  <NavItem
+<NavItem
   icon={<ClipboardList size={20} />}
   label="IT/Infra"
-  onClick={() => setSelectedTeam("IT/Infra")}
+  onClick={() => {
+    setSelectedTeam("IT/Infra");
+    setActiveView("board");
+  }}
   active={selectedTeam === "IT/Infra"}
-  />
-  <NavItem
+/>
+
+  
+<NavItem
   icon={<Kanban size={20} />}
   label="Board"
   active={!selectedTeam && viewMode === 'kanban'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
+    setSelectedTeam(null);
     setViewMode('kanban');
-    }}
-  />
+    setActiveView("board");
+  }}
+/>
 
-  <NavItem
+<NavItem
   icon={<List size={20} />}
   label="All Issues"
   active={!selectedTeam && viewMode === 'list'}
   onClick={() => {
-    setSelectedTeam(null);   // 🔥 IMPORTANT
+    setSelectedTeam(null);
     setViewMode('list');
-    }}
-  />
+    setActiveView("board");
+  }}
+/>
 
   <NavItem
   icon={<Globe size={20} />}
   label="External Issues"
   onClick={() => {
     setSelectedTeam("External Issues");
-    setViewMode('kanban');   // Important
-    }}
+    setViewMode('kanban');
+    setActiveView("board");
+  }}
   active={selectedTeam === "External Issues"}
-  />    
+/>
+
 </nav>
 
         
