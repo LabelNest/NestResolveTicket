@@ -309,15 +309,14 @@ const filteredTickets = useMemo(() => {
   }}
 />
 
-  <NavItem
+<NavItem
   icon={<Globe size={20} />}
   label="External Issues"
   onClick={() => {
-    setSelectedTeam("External Issues");
-    setViewMode('kanban');
-    setActiveView("board");
+    setSelectedTeam(null);
+    setActiveView("external");
   }}
-  active={selectedTeam === "External Issues"}
+  active={activeView === "external"}
 />
 
 </nav>
@@ -338,12 +337,12 @@ const filteredTickets = useMemo(() => {
   )}
 
   {/* Project Settings */}
-  <NavItem
-    icon={<Settings size={20} />}
-    label="Project Settings"
-    active={activeView === 'settings'}
-    onClick={() => setActiveView('settings')}
-  />
+<NavItem
+  icon={<Settings size={20} />}
+  label="Project Settings"
+  active={activeView === "settings"}
+  onClick={() => setActiveView("settings")}
+/>
 
 </div>
 
