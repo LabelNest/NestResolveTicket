@@ -313,10 +313,11 @@ const filteredTickets = useMemo(() => {
   icon={<Globe size={20} />}
   label="External Issues"
   onClick={() => {
-    setSelectedTeam(null);
-    setActiveView("external");
+    setSelectedTeam("External Issues");
+    setViewMode('kanban');
+    setActiveView("board");
   }}
-  active={activeView === "external"}
+  active={selectedTeam === "External Issues"}
 />
 
 </nav>
