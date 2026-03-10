@@ -445,6 +445,17 @@ const filteredTickets = useMemo(() => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                
+                <div className="flex items-center gap-3">
+                  {modalState !== 'selector' && (
+                    <button
+                      onClick={() => setModalState('selector')}
+                      className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                    >
+                      ← Back
+                    </button>
+                  )}
+              
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
@@ -638,13 +649,6 @@ const DynamicForm = ({ schema, onSubmit, onBack }: { schema: FormField[], onSubm
       ))}
 
       <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          ← Back
-        </button>
         <button
           type="submit"
           className="bg-[#0052CC] hover:bg-[#0747A6] text-white px-6 py-2 rounded-md font-bold text-sm shadow-md transition-all active:scale-95"
