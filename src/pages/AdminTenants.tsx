@@ -51,34 +51,30 @@ const AdminTenants = () => {
     loadTenants();
   };
 
+ 
   const loadTenants = async () => {
     setLoading(true);
 
-  
     const { data: tenantsData, error: tenantError } = await supabase
       .from("lni_tenants")
       .select("id, name, code, status, created_at");
 
     if (tenantError) {
-      console.error(tenantError);
       toast.error("Failed to load tenants");
       setLoading(false);
       return;
     }
-
 
     const { data: usersData, error: userError } = await supabase
       .from("nr_users")
       .select("tenant_id");
 
     if (userError) {
-      console.error(userError);
-      toast.error("Failed to load tenant users");
+      toast.error("Failed to load users");
       setLoading(false);
       return;
     }
 
-    
     const userCountMap: Record<string, number> = {};
     usersData?.forEach((u) => {
       if (!u.tenant_id) return;
@@ -86,7 +82,6 @@ const AdminTenants = () => {
         (userCountMap[u.tenant_id] || 0) + 1;
     });
 
-    
     const mapped: Tenant[] =
       tenantsData?.map((t) => ({
         ...t,
@@ -97,19 +92,57 @@ const AdminTenants = () => {
     setLoading(false);
   };
 
-  
-  const totalTenants = tenants.length;
-  const activeTenants = tenants.filter(t => t.status === "active").length;
-  const guestUsers =
-    tenants.find(t => t.code === "GUEST")?.users_count ?? 0;
-  const internalUsers =
-    tenants.find(t => t.code === "LNI")?.users_count ?? 0;
 
- 
+  const toggleTenantStatus = async (tenant: Tenant) => {
+    const newStatus =
+      tenant.status === "active" ? "inactive" : "active";
+
+    const { data, error } = await supabase
+      .from("lni_tenants")
+      .update({ status: newStatus })
+      .eq("id", tenant.id)
+      .select();
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      toast.error("Update blocked (Check RLS policy)");
+      return;
+    }
+
+    toast.success(
+      newStatus === "active"
+        ? "Tenant Activated"
+        : "Tenant Deactivated"
+    );
+
+    loadTenants();
+  };
+
+
+  const totalTenants = tenants.length;
+
+  const activeTenants = tenants.filter(
+    (t) => t.status === "active"
+  ).length;
+
+  const guestUsers =
+    tenants.find((t) => t.code === "GUEST")?.users_count ?? 0;
+
+  const internalUsers =
+    tenants.find((t) => t.code === "LNI")?.users_count ?? 0;
+
+
   return (
     <div className="p-10 space-y-8">
-      <h1 className="text-2xl font-semibold">Tenants Overview</h1>
+      <h1 className="text-2xl font-semibold">
+        Tenants Overview
+      </h1>
 
+     
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total Tenants" value={totalTenants} />
         <Stat label="Active Tenants" value={activeTenants} />
@@ -117,18 +150,28 @@ const AdminTenants = () => {
         <Stat label="Guest Users" value={guestUsers} />
       </div>
 
+     
       <div className="border rounded p-4">
-        <p className="mb-2 font-medium">Users per Tenant</p>
+        <p className="mb-2 font-medium">
+          Users per Tenant
+        </p>
+
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={tenants}>
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="users_count" fill="#2563eb" />
-          </BarChart>
+          {tenants.length > 0 && (
+            <BarChart data={tenants}>
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar
+                dataKey="users_count"
+                fill="#2563eb"
+              />
+            </BarChart>
+          )}
         </ResponsiveContainer>
       </div>
 
+      
       <div className="border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/30">
@@ -138,24 +181,64 @@ const AdminTenants = () => {
               <th className="p-3 text-left">Users</th>
               <th className="p-3 text-left">Status</th>
               <th className="p-3 text-left">Created</th>
+              <th className="p-3 text-left">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {tenants.map((t) => (
               <tr key={t.id} className="border-t">
-                <td className="p-3 font-medium">{t.name}</td>
+                <td className="p-3 font-medium">
+                  {t.name}
+                </td>
                 <td className="p-3">{t.code}</td>
-                <td className="p-3">{t.users_count}</td>
-                <td className="p-3 capitalize">{t.status}</td>
                 <td className="p-3">
-                  {new Date(t.created_at).toLocaleDateString()}
+                  {t.users_count}
+                </td>
+
+                <td className="p-3">
+                  <span
+                    className={
+                      t.status === "active"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    {t.status}
+                  </span>
+                </td>
+
+                <td className="p-3">
+                  {new Date(
+                    t.created_at
+                  ).toLocaleDateString()}
+                </td>
+
+                <td className="p-3">
+                  <button
+                    onClick={() =>
+                      toggleTenantStatus(t)
+                    }
+                    className={`px-3 py-1 rounded text-white ${
+                      t.status === "active"
+                        ? "bg-red-600"
+                        : "bg-green-600"
+                    }`}
+                  >
+                    {t.status === "active"
+                      ? "Deactivate"
+                      : "Activate"}
+                  </button>
                 </td>
               </tr>
             ))}
 
             {!loading && tenants.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                <td
+                  colSpan={6}
+                  className="p-6 text-center text-muted-foreground"
+                >
                   No tenants found
                 </td>
               </tr>
@@ -168,10 +251,20 @@ const AdminTenants = () => {
 };
 
 
-const Stat = ({ label, value }: { label: string; value: number }) => (
+const Stat = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) => (
   <div className="border rounded p-4">
-    <p className="text-sm text-muted-foreground">{label}</p>
-    <p className="text-2xl font-semibold">{value}</p>
+    <p className="text-sm text-muted-foreground">
+      {label}
+    </p>
+    <p className="text-2xl font-semibold">
+      {value}
+    </p>
   </div>
 );
 
