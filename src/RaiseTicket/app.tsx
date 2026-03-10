@@ -464,6 +464,7 @@ const filteredTickets = useMemo(() => {
                   {modalState === 'selector' ? 'Choose a category to get started' : selectedType?.description}
                 </p>
               </div>
+            </div>      
               <button
                 onClick={() => setModalState('closed')}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
