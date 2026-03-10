@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from "react-router-dom"; // admin navigate
 import { Shield } from "lucide-react";
+import { X, ChevronRight, ArrowLeft } from "lucide-react";
 
 import { supabase } from '@/lib/supabaseClient';
 import {
@@ -447,15 +448,16 @@ const filteredTickets = useMemo(() => {
             <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
                 
                 <div className="flex items-center gap-3">
-                  {modalState !== 'selector' && (
-                    <button
-                      onClick={() => setModalState('selector')}
-                      className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
-                    >
-                      ← Back
-                    </button>
-                  )}
-              
+                   {/* Back Arrow */}
+                    {modalState !== 'selector' && (
+                      <button
+                        onClick={() => setModalState('selector')}
+                        className="p-2 rounded-md hover:bg-slate-100 hover:-translate-x-1 transition-all duration-200"
+                      >
+                        <ArrowLeft size={26} className="text-slate-600" />
+                      </button>
+                    )}
+
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
