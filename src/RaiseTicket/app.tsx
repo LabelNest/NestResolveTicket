@@ -336,14 +336,17 @@ const filteredTickets = useMemo(() => {
       <span>Switch to Admin</span>
     </button>
   )}
-
-  {/* Project Settings */}
-<NavItem
-  icon={<Settings size={20} />}
-  label="Project Settings"
-  active={activeView === "settings"}
-  onClick={() => setActiveView("settings")}
-/>
+        
+          {/* Project Settings */}
+        <NavItem
+          icon={<Settings size={20} />}
+          label="Project Settings"
+          active={activeView === 'settings'}
+          onClick={() => {
+            setSelectedTeam(null);   // 🔥 important
+            setActiveView('settings');
+          }}
+        />
 
 </div>
 
