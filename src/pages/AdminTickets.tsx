@@ -13,7 +13,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 
 
@@ -62,7 +61,7 @@ const AdminTicketAnalytics = () => {
     init();
   }, []);
 
-
+ 
 
   const init = async () => {
 
@@ -87,7 +86,7 @@ const AdminTicketAnalytics = () => {
 
   };
 
-
+ 
 
   const loadUsers = async () => {
 
@@ -103,7 +102,7 @@ const AdminTicketAnalytics = () => {
   const normalize = (v: any) =>
     v ? String(v).trim().toUpperCase() : null;
 
- 
+
 
   const loadTickets = async () => {
 
@@ -220,7 +219,7 @@ const AdminTicketAnalytics = () => {
 
   });
 
-
+ 
 
   const total = tickets.length;
   const internalCount = tickets.filter((t) => t.source === "internal").length;
@@ -262,18 +261,13 @@ const AdminTicketAnalytics = () => {
 
   return (
 
-    <motion.div
-      className="p-10 space-y-10"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
+    <div className="p-10 space-y-10">
 
       <h1 className="text-3xl font-bold text-white">
         Ticket Management
       </h1>
 
-      
+     
 
       <div className="grid grid-cols-4 gap-6">
 
@@ -303,14 +297,15 @@ const AdminTicketAnalytics = () => {
               ))}
             </Pie>
             <Tooltip
-            contentStyle={{
-            backgroundColor: "#0f172a",
-            border: "1px solid #334155",
-            borderRadius: "8px",
-            color: "#fff",
-            }}
-            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
-            itemStyle={{ color: "#fff" }}/>
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
           </PieChart>
 
         </Chart>
@@ -321,14 +316,15 @@ const AdminTicketAnalytics = () => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip
-            contentStyle={{
-            backgroundColor: "#0f172a",
-            border: "1px solid #334155",
-            borderRadius: "8px",
-            color: "#fff",
-            }}
-            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
-            itemStyle={{ color: "#fff" }}/>
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
             <Bar dataKey="value">
               {priorityData.map((entry, index) => (
                 <Cell key={index} fill={PRIORITY_COLORS[entry.name]} />
@@ -349,14 +345,15 @@ const AdminTicketAnalytics = () => {
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip
-            contentStyle={{
-            backgroundColor: "#0f172a",
-            border: "1px solid #334155",
-            borderRadius: "8px",
-            color: "#fff",
-            }}
-            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
-            itemStyle={{ color: "#fff" }}/>
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
             <Bar dataKey="value" fill="#16a34a" />
           </BarChart>
 
@@ -364,16 +361,14 @@ const AdminTicketAnalytics = () => {
 
       </div>
 
-      
+     
 
       <div className="flex gap-4">
 
         {["ALL", "ASSIGNED", "UNASSIGNED"].map((type) => (
 
-          <motion.button
+          <button
             key={type}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={() => setFilter(type as FilterType)}
             className={`px-6 py-3 rounded-xl font-medium ${
               filter === type
@@ -382,13 +377,13 @@ const AdminTicketAnalytics = () => {
             }`}
           >
             {type}
-          </motion.button>
+          </button>
 
         ))}
 
       </div>
 
-     
+    
 
       <div className="bg-[#0f172a] rounded-xl p-6 shadow-lg space-y-4">
 
@@ -396,65 +391,57 @@ const AdminTicketAnalytics = () => {
           Assign Tickets
         </h2>
 
-        <AnimatePresence>
+        {filteredTickets.map((ticket) => (
 
-          {filteredTickets.map((ticket) => (
+          <div
+            key={`${ticket.source}-${ticket.id}`}
+            className="flex justify-between items-center bg-[#111827] rounded-lg p-4"
+          >
 
-            <motion.div
-              key={`${ticket.source}-${ticket.id}`}
-              layout
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex justify-between items-center bg-[#111827] rounded-lg p-4"
+            <div>
+
+              <p className="font-semibold text-white">
+                {ticket.created_by_name || "Unknown User"}
+              </p>
+
+              <p className="text-xs text-gray-400">
+                {ticket.created_by_email}
+              </p>
+
+              <p className="text-xs text-gray-500 mt-1">
+                #{ticket.id.slice(0,6)} • {ticket.priority} • {ticket.status} • {ticket.source}
+              </p>
+
+            </div>
+
+            <select
+              value={ticket.assigned_to || ""}
+              onChange={(e) =>
+                assignTicket(ticket.id, e.target.value, ticket.source)
+              }
+              className="w-56 bg-[#1e293b] text-white border border-gray-600 rounded-lg px-3 py-2"
             >
 
-              <div>
+              <option value="">Unassigned</option>
 
-                <p className="font-semibold text-white">
-                  {ticket.created_by_name || "Unknown User"}
-                </p>
+              {users.map((user) => (
+                <option
+                  key={user.nr_auth_user_id}
+                  value={user.nr_auth_user_id}
+                >
+                  {user.nr_name} ({user.nr_email})
+                </option>
+              ))}
 
-                <p className="text-xs text-gray-400">
-                  {ticket.created_by_email}
-                </p>
+            </select>
 
-                <p className="text-xs text-gray-500 mt-1">
-                  #{ticket.id.slice(0,6)} • {ticket.priority} • {ticket.status} • {ticket.source}
-                </p>
+          </div>
 
-              </div>
-
-              <select
-                value={ticket.assigned_to || ""}
-                onChange={(e) =>
-                  assignTicket(ticket.id, e.target.value, ticket.source)
-                }
-                className="w-56 bg-[#1e293b] text-white border border-gray-600 rounded-lg px-3 py-2"
-              >
-
-                <option value="">Unassigned</option>
-
-                {users.map((user) => (
-                  <option
-                    key={user.nr_auth_user_id}
-                    value={user.nr_auth_user_id}
-                  >
-                    {user.nr_name} ({user.nr_email})
-                  </option>
-                ))}
-
-              </select>
-
-            </motion.div>
-
-          ))}
-
-        </AnimatePresence>
+        ))}
 
       </div>
 
-    </motion.div>
+    </div>
 
   );
 
@@ -464,28 +451,21 @@ const AdminTicketAnalytics = () => {
 
 const BigStat = ({ label, value }: { label: string; value: number }) => (
 
-  <motion.div
-    whileHover={{ scale: 1.05 }}
-    className="bg-[#0f172a] rounded-2xl p-6 shadow-lg"
-  >
+  <div className="bg-[#0f172a] rounded-2xl p-6 shadow-lg">
     <p className="text-sm text-gray-400">{label}</p>
     <p className="text-3xl font-bold text-white mt-2">{value}</p>
-  </motion.div>
+  </div>
 
 );
 
 const Chart = ({ title, children }: any) => (
 
-  <motion.div
-    className="bg-[#0f172a] rounded-xl p-6 shadow-lg"
-    initial={{ opacity: 0, y: 25 }}
-    animate={{ opacity: 1, y: 0 }}
-  >
+  <div className="bg-[#0f172a] rounded-xl p-6 shadow-lg">
     <p className="mb-4 font-semibold text-white">{title}</p>
     <ResponsiveContainer width="100%" height={260}>
       {children}
     </ResponsiveContainer>
-  </motion.div>
+  </div>
 
 );
 
