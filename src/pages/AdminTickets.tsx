@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 
@@ -29,6 +30,7 @@ type Ticket = {
 type User = {
   nr_auth_user_id: string;
   nr_name: string;
+  nr_email: string;
 };
 
 type FilterType = "ALL" | "ASSIGNED" | "UNASSIGNED";
@@ -49,19 +51,23 @@ const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
 
 
 const AdminTicketAnalytics = () => {
+
   const navigate = useNavigate();
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState<FilterType>("ALL");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     init();
   }, []);
 
+
+
   const init = async () => {
+
     const { data } = await supabase.auth.getSession();
+
     if (!data.session) return navigate("/");
 
     const { data: admin } = await supabase
@@ -78,23 +84,28 @@ const AdminTicketAnalytics = () => {
 
     await loadUsers();
     await loadTickets();
+
   };
 
+
+
   const loadUsers = async () => {
+
     const { data } = await supabase
       .from("nr_users")
-      .select("nr_auth_user_id, nr_name")
+      .select("nr_auth_user_id, nr_name, nr_email")
       .eq("nr_status", "active");
 
     setUsers(data || []);
+
   };
 
   const normalize = (v: any) =>
     v ? String(v).trim().toUpperCase() : null;
 
-  
+ 
+
   const loadTickets = async () => {
-    setLoading(true);
 
     const { data: external } = await supabase
       .from("nr_resolve_tickets")
@@ -123,16 +134,17 @@ const AdminTicketAnalytics = () => {
       })) || [];
 
     setTickets([...formattedExternal, ...formattedInternal]);
-    setLoading(false);
+
   };
 
-  
+
 
   const assignTicket = async (
     ticketId: string,
     userId: string,
     source: "external" | "internal"
   ) => {
+
     const table =
       source === "external"
         ? "nr_resolve_tickets"
@@ -144,26 +156,68 @@ const AdminTicketAnalytics = () => {
       .eq("id", ticketId);
 
     if (error) {
-      toast.error("Failed to assign");
+      toast.error("Failed to assign ticket");
       return;
+    }
+
+
+
+    const user = users.find((u) => u.nr_auth_user_id === userId);
+    const ticket = tickets.find((t) => t.id === ticketId);
+
+    if (user && ticket) {
+
+      try {
+
+        const { data: { session } } = await supabase.auth.getSession();
+
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-ticket-assigned-email`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              email: user.nr_email,
+              name: user.nr_name,
+              ticketId: ticketId,
+              priority: ticket.priority,
+            }),
+          }
+        );
+
+      } catch (err) {
+        console.error("Email sending failed:", err);
+      }
+
     }
 
     toast.success("Ticket assigned");
 
     setTickets((prev) =>
       prev.map((t) =>
-        t.id === ticketId ? { ...t, assigned_to: userId || null } : t
+        t.id === ticketId
+          ? { ...t, assigned_to: userId || null }
+          : t
       )
     );
+
   };
 
 
 
   const filteredTickets = tickets.filter((t) => {
+
     if (filter === "ALL") return true;
+
     if (filter === "ASSIGNED") return t.assigned_to !== null;
+
     if (filter === "UNASSIGNED") return t.assigned_to === null;
+
     return true;
+
   });
 
 
@@ -193,6 +247,7 @@ const AdminTicketAnalytics = () => {
   }));
 
   const statusMap: Record<string, number> = {};
+
   tickets.forEach((t) => {
     if (!t.status) return;
     statusMap[t.status] = (statusMap[t.status] || 0) + 1;
@@ -206,7 +261,13 @@ const AdminTicketAnalytics = () => {
 
 
   return (
-    <div className="p-10 space-y-10">
+
+    <motion.div
+      className="p-10 space-y-10"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
 
       <h1 className="text-3xl font-bold text-white">
         Ticket Management
@@ -234,41 +295,51 @@ const AdminTicketAnalytics = () => {
       <div className="grid grid-cols-3 gap-10">
 
         <Chart title="By Status">
+
           <PieChart>
-            <Pie
-              data={statusData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={95}
-            >
+            <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={95}>
               {statusData.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip
+            contentStyle={{
+            backgroundColor: "#0f172a",
+            border: "1px solid #334155",
+            borderRadius: "8px",
+            color: "#fff",
+            }}
+            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+            itemStyle={{ color: "#fff" }}/>
           </PieChart>
+
         </Chart>
 
         <Chart title="By Priority">
-          <BarChart
-            data={priorityData}
-            margin={{ top: 20, right: 20, left: 40, bottom: 5 }}
-          >
+
+          <BarChart data={priorityData}>
             <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="value" barSize={50}>
+            <YAxis />
+            <Tooltip
+            contentStyle={{
+            backgroundColor: "#0f172a",
+            border: "1px solid #334155",
+            borderRadius: "8px",
+            color: "#fff",
+            }}
+            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+            itemStyle={{ color: "#fff" }}/>
+            <Bar dataKey="value">
               {priorityData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={PRIORITY_COLORS[entry.name]}
-                />
+                <Cell key={index} fill={PRIORITY_COLORS[entry.name]} />
               ))}
             </Bar>
           </BarChart>
+
         </Chart>
 
         <Chart title="Internal vs External">
+
           <BarChart
             data={[
               { name: "Internal", value: internalCount },
@@ -277,9 +348,18 @@ const AdminTicketAnalytics = () => {
           >
             <XAxis dataKey="name" />
             <YAxis />
-            <Tooltip />
+            <Tooltip
+            contentStyle={{
+            backgroundColor: "#0f172a",
+            border: "1px solid #334155",
+            borderRadius: "8px",
+            color: "#fff",
+            }}
+            labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+            itemStyle={{ color: "#fff" }}/>
             <Bar dataKey="value" fill="#16a34a" />
           </BarChart>
+
         </Chart>
 
       </div>
@@ -287,9 +367,13 @@ const AdminTicketAnalytics = () => {
       
 
       <div className="flex gap-4">
+
         {["ALL", "ASSIGNED", "UNASSIGNED"].map((type) => (
-          <button
+
+          <motion.button
             key={type}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setFilter(type as FilterType)}
             className={`px-6 py-3 rounded-xl font-medium ${
               filter === type
@@ -298,76 +382,111 @@ const AdminTicketAnalytics = () => {
             }`}
           >
             {type}
-          </button>
+          </motion.button>
+
         ))}
+
       </div>
 
      
 
       <div className="bg-[#0f172a] rounded-xl p-6 shadow-lg space-y-4">
+
         <h2 className="text-xl font-semibold text-white">
           Assign Tickets
         </h2>
 
-        {filteredTickets.map((ticket) => (
-          <div
-            key={`${ticket.source}-${ticket.id}`}
-            className="flex justify-between items-center bg-[#111827] rounded-lg p-4"
-          >
-            <div>
-              <p className="font-semibold text-white">
-                {ticket.created_by_name || "Unknown User"}
-              </p>
+        <AnimatePresence>
 
-              <p className="text-xs text-gray-400">
-                {ticket.created_by_email}
-              </p>
+          {filteredTickets.map((ticket) => (
 
-              <p className="text-xs text-gray-500 mt-1">
-                ID: #{ticket.id.slice(0, 6)} | {ticket.source.toUpperCase()} | {ticket.priority} | {ticket.status}
-              </p>
-            </div>
-
-            <select
-              value={ticket.assigned_to || ""}
-              onChange={(e) =>
-                assignTicket(ticket.id, e.target.value, ticket.source)
-              }
-              className="w-56 bg-[#1e293b] text-white border border-gray-600 rounded-lg px-3 py-2"
+            <motion.div
+              key={`${ticket.source}-${ticket.id}`}
+              layout
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-between items-center bg-[#111827] rounded-lg p-4"
             >
-              <option value="">Unassigned</option>
-              {users.map((user) => (
-                <option
-                  key={user.nr_auth_user_id}
-                  value={user.nr_auth_user_id}
-                >
-                  {user.nr_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+
+              <div>
+
+                <p className="font-semibold text-white">
+                  {ticket.created_by_name || "Unknown User"}
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  {ticket.created_by_email}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  #{ticket.id.slice(0,6)} • {ticket.priority} • {ticket.status} • {ticket.source}
+                </p>
+
+              </div>
+
+              <select
+                value={ticket.assigned_to || ""}
+                onChange={(e) =>
+                  assignTicket(ticket.id, e.target.value, ticket.source)
+                }
+                className="w-56 bg-[#1e293b] text-white border border-gray-600 rounded-lg px-3 py-2"
+              >
+
+                <option value="">Unassigned</option>
+
+                {users.map((user) => (
+                  <option
+                    key={user.nr_auth_user_id}
+                    value={user.nr_auth_user_id}
+                  >
+                    {user.nr_name} ({user.nr_email})
+                  </option>
+                ))}
+
+              </select>
+
+            </motion.div>
+
+          ))}
+
+        </AnimatePresence>
+
       </div>
-    </div>
+
+    </motion.div>
+
   );
+
 };
 
 
 
 const BigStat = ({ label, value }: { label: string; value: number }) => (
-  <div className="bg-[#0f172a] rounded-2xl p-6 shadow-lg min-h-[110px] flex flex-col justify-center">
+
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    className="bg-[#0f172a] rounded-2xl p-6 shadow-lg"
+  >
     <p className="text-sm text-gray-400">{label}</p>
     <p className="text-3xl font-bold text-white mt-2">{value}</p>
-  </div>
+  </motion.div>
+
 );
 
 const Chart = ({ title, children }: any) => (
-  <div className="bg-[#0f172a] rounded-xl p-6 shadow-lg">
+
+  <motion.div
+    className="bg-[#0f172a] rounded-xl p-6 shadow-lg"
+    initial={{ opacity: 0, y: 25 }}
+    animate={{ opacity: 1, y: 0 }}
+  >
     <p className="mb-4 font-semibold text-white">{title}</p>
     <ResponsiveContainer width="100%" height={260}>
       {children}
     </ResponsiveContainer>
-  </div>
+  </motion.div>
+
 );
 
 export default AdminTicketAnalytics;
