@@ -37,6 +37,7 @@ import TicketList from './ticketlist';
 import TicketDetailModal from './TicketDetailModal'; // admin edit part
 import AdminApprovals from "@/pages/AdminApprovals";
 import { ClipboardList, Globe } from "lucide-react"; // for external logo
+import { toast } from 'sonner';
 
 // --- Types for internal state ---
 type ModalState = 'closed' | 'selector' | 'form';
@@ -240,6 +241,20 @@ const filteredTickets = useMemo(() => {
       .includes(searchQuery.toLowerCase())
   );
 }, [tickets, searchQuery]);
+
+  //for edit admin part
+  const handleTicketClick = (ticket: Ticket) => {
+    if (isAdmin) {
+      setSelectedTicket(ticket);
+    }
+  };
+
+  const handleUpdateTicket = (ticketId: string, updated: Partial<Ticket>) => {
+    setTickets(prev =>
+      prev.map(t => (t.id === ticketId ? { ...t, ...updated } : t))
+    );
+    setSelectedTicket(null);
+  };
 
   
   return (
