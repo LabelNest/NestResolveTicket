@@ -552,7 +552,12 @@ const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, labe
 );
 
 // Fix: Explicitly type KanbanColumn as React.FC to allow 'key' prop in JSX mapping and ensure correct props interface
-const KanbanColumn: React.FC<{ status: TicketStatus, tickets: Ticket[] }> = ({ status, tickets }) => (
+const KanbanColumn: React.FC<{
+  status: TicketStatus,
+  tickets: Ticket[],
+  isAdmin: boolean,
+  onTicketClick: (ticket: Ticket) => void
+}> = ({ status, tickets, isAdmin, onTicketClick }) => (
   <div className="w-80 flex flex-col shrink-0 h-full max-h-full">
     {/* Column Header */}
     <div className="mb-3 px-2 flex items-center justify-between shrink-0">
@@ -570,10 +575,11 @@ const KanbanColumn: React.FC<{ status: TicketStatus, tickets: Ticket[] }> = ({ s
     {/* The Ticket Box - Cards stay inside here now */}
     <div className="flex-1 bg-slate-100/50 rounded-lg p-2 flex flex-col gap-3 min-h-0 border border-slate-200 overflow-y-auto">
       {tickets.map(ticket => (
-        <div
-          key={ticket.id}
-          className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer group shrink-0"
-        >
+  <div
+    key={ticket.id}
+    onClick={() => isAdmin && onTicketClick(ticket)}
+    className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
+  >
           <div className="text-sm font-medium text-slate-700 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
             {ticket.title}
           </div>
