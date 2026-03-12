@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-/* ================= ENV ================= */
+
 
 const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
 
@@ -8,7 +8,7 @@ if (!BREVO_API_KEY) {
   throw new Error("BREVO_API_KEY missing");
 }
 
-/* ================= CORS ================= */
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +17,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-/* ================= BREVO EMAIL ================= */
+
 
 async function sendBrevoEmail(
   to: string,
@@ -34,7 +34,7 @@ async function sendBrevoEmail(
     body: JSON.stringify({
       sender: {
         name: "LabelNest Support",
-        email: "contact@labelnest.in", // must be verified in Brevo
+        email: "contact@labelnest.in", 
       },
       to: [{ email: to }],
       subject,
@@ -53,11 +53,11 @@ async function sendBrevoEmail(
 
 }
 
-/* ================= FUNCTION ================= */
+
 
 serve(async (req) => {
 
-  /* ===== CORS PREFLIGHT ===== */
+
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -67,7 +67,7 @@ serve(async (req) => {
 
     console.log("EMAIL FUNCTION TRIGGERED");
 
-    /* ===== PARSE BODY ===== */
+  
 
     const body = await req.json();
 
@@ -86,7 +86,7 @@ serve(async (req) => {
       );
     }
 
-    /* ===== EMAIL TEMPLATE ===== */
+   
 
     const html = `
       <div style="font-family:Arial;padding:20px">
@@ -111,7 +111,7 @@ serve(async (req) => {
       </div>
     `;
 
-    /* ===== SEND EMAIL ===== */
+   
 
     await sendBrevoEmail(
       email,
@@ -148,5 +148,6 @@ serve(async (req) => {
     );
 
   }
+
 
 });
