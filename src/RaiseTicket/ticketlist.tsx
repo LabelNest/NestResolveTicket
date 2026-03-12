@@ -4,7 +4,7 @@ import type { Ticket } from '../types';
 import { supabase } from "@/lib/supabaseClient";
  
 
-export default function TicketList({ tickets }: { tickets: Ticket[] }) {
+export default function TicketList({ tickets, isAdmin, onTicketClick }: { tickets: Ticket[]; isAdmin?: boolean; onTicketClick?: (ticket: Ticket) => void }) {
     if (!tickets.length) {
         return (
             <div className="text-center text-slate-400 py-20">
@@ -56,7 +56,8 @@ export default function TicketList({ tickets }: { tickets: Ticket[] }) {
                     {tickets.map(ticket => (
                         <tr
                             key={ticket.id}
-                            className="border-b hover:bg-slate-50 transition"
+                            onClick={() => isAdmin && onTicketClick?.(ticket)}
+                            className={`border-b hover:bg-slate-50 transition ${isAdmin ? 'cursor-pointer' : ''}`}
                         >
                             <td className="px-4 py-3 text-blue-600 font-medium">
                                 NR-{ticket.id.slice(0, 4)}
@@ -85,4 +86,5 @@ export default function TicketList({ tickets }: { tickets: Ticket[] }) {
         </div>
     );
 }
+
 
