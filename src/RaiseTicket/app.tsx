@@ -34,6 +34,7 @@ import {
   Inbox
 } from 'lucide-react';
 import TicketList from './ticketlist';
+import TicketDetailModal from './TicketDetailModal'; // admin edit part
 import AdminApprovals from "@/pages/AdminApprovals";
 import { ClipboardList, Globe } from "lucide-react"; // for external logo
 
@@ -55,7 +56,7 @@ const App: React.FC = () => {
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
-
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
 //Ticket initializaing
   useEffect(() => {
@@ -425,6 +426,8 @@ const filteredTickets = useMemo(() => {
                       key={status}
                       status={status}
                       tickets={filteredTickets.filter(t => t.status === status)}
+                      isAdmin={isAdmin}
+                      onTicketClick={handleTicketClick}
                     />
                   ))}
                 </div>
@@ -504,6 +507,17 @@ const filteredTickets = useMemo(() => {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Ticket Detail Modal (Admin only) */}
+      {selectedTicket && (
+        <TicketDetailModal
+          ticket={selectedTicket}
+          isOpen={!!selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+          onSave={handleUpdateTicket}
+          isExternal={selectedTeam === 'External Issues'}
+        />
       )}
     </div>
   );
