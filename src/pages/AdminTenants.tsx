@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
@@ -51,7 +52,7 @@ const AdminTenants = () => {
     loadTenants();
   };
 
- 
+
   const loadTenants = async () => {
     setLoading(true);
 
@@ -142,7 +143,7 @@ const AdminTenants = () => {
         Tenants Overview
       </h1>
 
-     
+      
       <div className="grid grid-cols-4 gap-4">
         <Stat label="Total Tenants" value={totalTenants} />
         <Stat label="Active Tenants" value={activeTenants} />
@@ -161,7 +162,16 @@ const AdminTenants = () => {
             <BarChart data={tenants}>
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
               <Bar
                 dataKey="users_count"
                 fill="#2563eb"
