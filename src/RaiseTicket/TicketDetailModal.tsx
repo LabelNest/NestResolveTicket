@@ -9,6 +9,7 @@ import {
   Check,
   Trash2,
   Circle,
+  MessageSquare,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Ticket, TicketStatus, Priority } from './types';
@@ -29,6 +30,7 @@ interface TicketDetailModalProps {
   onClose: () => void;
   onSave: (ticketId: string, updated: Partial<Ticket>) => void;
   isExternal?: boolean;
+  isAdmin?: boolean;
 }
 
 interface TicketComment {
@@ -72,6 +74,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   onClose,
   onSave,
   isExternal = false,
+  isAdmin = false,
 }) => {
   // Editable state
   const [title, setTitle] = useState(ticket.title);
@@ -88,6 +91,13 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [users, setUsers] = useState<NrUser[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Comments state
+  const [comments, setComments] = useState<TicketComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  const isReadOnly = !isAdmin;
 
   // Labels derived from ticket
   const labels: { text: string; color: string }[] = [];
@@ -106,6 +116,25 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     };
     loadUsers();
   }, []);
+
+  // Load comments
+  useEffect(() => {
+    const loadComments = async () => {
+      setLoadingComments(true);
+      const { data, error } = await supabase
+        .from('nr_ticket_comments')
+        .select('*')
+        .eq('ticket_id', ticket.id)
+        .order('created_at', { ascending: true });
+      if (!error && data) {
+        setComments(data);
+      }
+      setLoadingComments(false);
+    };
+    if (isOpen) {
+      loadComments();
+    }
+  }, [ticket.id, isOpen]);
 
   // Reset state when ticket changes
   useEffect(() => {
@@ -149,7 +178,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setSaving(false);
   };
 
- const handlePostComment = async () => {
+  const handlePostComment = async () => {
     if (!newComment.trim()) return;
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -185,7 +214,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       toast.success('Comment posted');
     }
   };
-  
+
   const addChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
     setChecklist(prev => [
@@ -236,7 +265,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="flex-1 bg-transparent text-white text-lg font-semibold outline-none border-b border-transparent focus:border-blue-500 transition-colors pb-0.5"
+                disabled={isReadOnly}
+                className="flex-1 bg-transparent text-white text-lg font-semibold outline-none border-b border-transparent focus:border-blue-500 transition-colors pb-0.5 disabled:opacity-80 disabled:cursor-not-allowed"
                 placeholder="Task name"
               />
             </div>
@@ -266,7 +296,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
             <select
               value={assignedTo ?? ''}
               onChange={e => setAssignedTo(e.target.value || null)}
-              className="bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none flex-1 transition-colors"
+              disabled={isReadOnly}
+              className="bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none flex-1 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <option value="">Assign</option>
               {users.map(u => (
@@ -305,7 +336,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <select
                 value={status}
                 onChange={e => setStatus(e.target.value as TicketStatus)}
-                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                disabled={isReadOnly}
+                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {STATUS_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -321,7 +353,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <select
                 value={status}
                 onChange={e => setStatus(e.target.value as TicketStatus)}
-                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                disabled={isReadOnly}
+                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <option value={TicketStatus.TODO}>Not started</option>
                 <option value={TicketStatus.ACKNOWLEDGED}>Acknowledged</option>
@@ -342,7 +375,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                 <select
                   value={priority}
                   onChange={e => setPriority(e.target.value as Priority)}
-                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-7 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                  disabled={isReadOnly}
+                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-7 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {PRIORITY_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -368,7 +402,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                  disabled={isReadOnly}
+                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                   placeholder="Start anytime"
                 />
               </div>
@@ -385,7 +420,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                   type="date"
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
-                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                  disabled={isReadOnly}
+                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                   placeholder="Due anytime"
                 />
               </div>
@@ -403,7 +439,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                 <select
                   value={repeatOption}
                   onChange={e => setRepeatOption(e.target.value)}
-                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors"
+                  disabled={isReadOnly}
+                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md pl-8 pr-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   <option value="none">Does not repeat</option>
                   <option value="daily">Daily</option>
@@ -421,7 +458,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                   type="checkbox"
                   checked={showOnCard}
                   onChange={e => setShowOnCard(e.target.checked)}
-                  className="w-4 h-4 rounded border-[#444] bg-[#2d2d2d] text-blue-500 focus:ring-blue-500 focus:ring-offset-0 accent-blue-500"
+                  disabled={isReadOnly}
+                  className="w-4 h-4 rounded border-[#444] bg-[#2d2d2d] text-blue-500 focus:ring-blue-500 focus:ring-offset-0 accent-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm text-[#ccc]">Show on card</span>
               </label>
@@ -436,9 +474,10 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
+              disabled={isReadOnly}
               rows={5}
               placeholder="Type a description or add notes here"
-              className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666]"
+              className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666] disabled:opacity-70 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -457,18 +496,17 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                 >
                   <button
                     onClick={() => toggleChecklistItem(item.id)}
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                      item.done
+                    disabled={isReadOnly}
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${item.done
                         ? 'bg-blue-500 border-blue-500'
                         : 'border-[#555] hover:border-[#888]'
-                    }`}
+                      } ${isReadOnly ? 'cursor-not-allowed opacity-70' : ''}`}
                   >
                     {item.done && <Check size={12} className="text-white" />}
                   </button>
                   <span
-                    className={`text-sm flex-1 ${
-                      item.done ? 'line-through text-[#666]' : 'text-[#ddd]'
-                    }`}
+                    className={`text-sm flex-1 ${item.done ? 'line-through text-[#666]' : 'text-[#ddd]'
+                      }`}
                   >
                     {item.text}
                   </span>
@@ -483,28 +521,88 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
             </div>
 
             {/* Add new item */}
-            <div className="flex items-center gap-2">
-              <Circle size={16} className="text-[#555] shrink-0" />
-              <input
-                value={newChecklistItem}
-                onChange={e => setNewChecklistItem(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addChecklistItem()}
-                placeholder="Add an item"
-                className="flex-1 bg-transparent text-sm text-[#ccc] outline-none border-b border-transparent focus:border-[#555] pb-0.5 transition-colors placeholder:text-[#555]"
-              />
-              {newChecklistItem && (
-                <button
-                  onClick={addChecklistItem}
-                  className="p-1 rounded hover:bg-[#333] text-blue-400"
-                >
-                  <Plus size={14} />
-                </button>
+            {!isReadOnly && (
+              <div className="flex items-center gap-2">
+                <Circle size={16} className="text-[#555] shrink-0" />
+                <input
+                  value={newChecklistItem}
+                  onChange={e => setNewChecklistItem(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addChecklistItem()}
+                  placeholder="Add an item"
+                  className="flex-1 bg-transparent text-sm text-[#ccc] outline-none border-b border-transparent focus:border-[#555] pb-0.5 transition-colors placeholder:text-[#555]"
+                />
+                {newChecklistItem && (
+                  <button
+                    onClick={addChecklistItem}
+                    className="p-1 rounded hover:bg-[#333] text-blue-400"
+                  >
+                    <Plus size={14} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ─── COMMENTS SECTION ─── */}
+          <div className="border-t border-[#333] pt-5 mt-5">
+            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+              <MessageSquare size={16} className="text-[#888]" />
+              Comments
+            </h3>
+
+            {/* Comment List */}
+            <div className="space-y-4 mb-4">
+              {loadingComments ? (
+                <p className="text-xs text-[#666]">Loading comments...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-xs text-[#666] italic">No comments yet. Be the first to start the conversation.</p>
+              ) : (
+                comments.map((cm) => (
+                  <div key={cm.id} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center shrink-0 border border-blue-500/30">
+                      <span className="text-xs font-bold text-blue-400">
+                        {cm.created_by_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 bg-[#252525] rounded-lg p-3 border border-[#333]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-[#ddd]">{cm.created_by_name}</span>
+                        <span className="text-[10px] text-[#666]">
+                          {new Date(cm.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[#bbb] whitespace-pre-wrap">{cm.comment}</p>
+                    </div>
+                  </div>
+                ))
               )}
+            </div>
+
+            {/* Post Comment Input */}
+            <div className="flex gap-3 items-start">
+              <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center shrink-0">
+                <UserPlus size={14} className="text-[#888]" />
+              </div>
+              <div className="flex-1 relative">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="w-full bg-[#252525] text-white text-sm rounded-lg px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors min-h-[80px]"
+                />
+                <button
+                  onClick={handlePostComment}
+                  disabled={!newComment.trim()}
+                  className="mt-2 px-4 py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed float-right"
+                >
+                  Post Comment
+                </button>
+              </div>
             </div>
           </div>
 
           {/* ─── METADATA (read-only) ─── */}
-          <div className="border-t border-[#333] pt-4 space-y-2">
+          <div className="border-t border-[#333] pt-6 mt-6 space-y-2">
             <p className="text-xs text-[#666]">
               <span className="text-[#888]">Created by:</span>{' '}
               {ticket.created_by_name ?? 'Unknown'}{' '}
@@ -514,10 +612,10 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <span className="text-[#888]">Created:</span>{' '}
               {ticket.created_at
                 ? new Date(ticket.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })
                 : '—'}
             </p>
             <p className="text-xs text-[#666]">
@@ -535,13 +633,15 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
           >
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-5 py-2 text-sm font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 shadow-lg shadow-blue-600/20"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          {!isReadOnly && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-5 py-2 text-sm font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 shadow-lg shadow-blue-600/20"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
         </div>
       </div>
     </>
