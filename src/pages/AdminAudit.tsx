@@ -58,7 +58,7 @@ const AdminAudit = () => {
     setLoading(false);
   };
 
- 
+
   const loadAuditData = async () => {
     const [
       authUsers,
@@ -139,7 +139,16 @@ const AdminAudit = () => {
                 <Cell fill="#16a34a" />
                 <Cell fill="#dc2626" />
               </Pie>
-              <Tooltip />
+              <Tooltip
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -153,7 +162,16 @@ const AdminAudit = () => {
                 tick={{ fontSize: 12 }}
               />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+              labelStyle={{ color: "#38bdf8", fontWeight: "bold" }}
+              itemStyle={{ color: "#fff" }}
+            />
               <Bar dataKey="approved" fill="#16a34a" />
               <Bar dataKey="rejected" fill="#dc2626" />
             </BarChart>
