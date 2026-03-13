@@ -30,6 +30,7 @@ type User = {
   nr_auth_user_id: string;
   nr_name: string;
   nr_email: string;
+  role?: "admin" | "user";
 };
 
 type FilterType = "ALL" | "ASSIGNED" | "UNASSIGNED";
@@ -86,16 +87,36 @@ const AdminTicketAnalytics = () => {
 
   };
 
- 
+
 
   const loadUsers = async () => {
 
-    const { data } = await supabase
+    const { data: usersData } = await supabase
       .from("nr_users")
       .select("nr_auth_user_id, nr_name, nr_email")
       .eq("nr_status", "active");
 
-    setUsers(data || []);
+    const { data: adminsData } = await supabase
+      .from("nr_admins")
+      .select("nr_auth_user_id, nr_name, nr_email");
+
+const formattedUsers: User[] =
+  usersData?.map((u) => ({
+    nr_auth_user_id: u.nr_auth_user_id,
+    nr_name: u.nr_name,
+    nr_email: u.nr_email,
+    role: "user",
+  })) || [];
+
+const formattedAdmins: User[] =
+  adminsData?.map((a) => ({
+    nr_auth_user_id: a.nr_auth_user_id,
+    nr_name: a.nr_name,
+    nr_email: a.nr_email,
+    role: "admin",
+  })) || [];
+
+    setUsers([...(formattedAdmins || []), ...(formattedUsers || [])]);
 
   };
 
@@ -159,10 +180,10 @@ const AdminTicketAnalytics = () => {
       return;
     }
 
-
-
     const user = users.find((u) => u.nr_auth_user_id === userId);
     const ticket = tickets.find((t) => t.id === ticketId);
+
+  
 
     if (user && ticket) {
 
@@ -193,19 +214,82 @@ const AdminTicketAnalytics = () => {
 
     }
 
-    toast.success("Ticket assigned");
 
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === ticketId
-          ? { ...t, assigned_to: userId || null }
-          : t
-      )
+
+
+
+try {
+
+  if (user && ticket) {
+
+    await fetch(
+      "https://defaultc8a603939048474992f755d1b32d5b.68.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/2632d9c95de94d769a1bfe988010b6d9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=hr59uKC0MvPcmxAXuoBtzVXaeAZoA_s0tCDSuTwy3j0",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "@type": "MessageCard",
+          "@context": "https://schema.org/extensions",
+          summary: "Ticket Assigned",
+          themeColor: "0076D7",
+          title: "🎫 Ticket Assigned",
+          sections: [
+            {
+              activityTitle: "New Ticket Assignment",
+              facts: [
+                {
+                  name: "Ticket ID",
+                  value: ticketId,
+                },
+                {
+                  name: "Priority",
+                  value: ticket.priority,
+                },
+                {
+                  name: "Assigned To",
+                  value: `${user.nr_name} (${user.nr_email})`,
+                },
+                {
+                  name: "Source",
+                  value: ticket.source,
+                },
+                {
+                  name: "Status",
+                  value: ticket.status,
+                },
+              ],
+              markdown: true,
+            },
+          ],
+        }),
+      }
     );
 
-  };
+  }
+
+} catch (err) {
+  console.error("Teams notification failed:", err);
+}
 
 
+
+toast.success("Ticket assigned");
+
+
+
+setTickets((prev) =>
+  prev.map((t) =>
+    t.id === ticketId
+      ? { ...t, assigned_to: userId || null }
+      : t
+  )
+);
+
+};
+
+ 
 
   const filteredTickets = tickets.filter((t) => {
 
@@ -257,7 +341,7 @@ const AdminTicketAnalytics = () => {
     value,
   }));
 
-
+  
 
   return (
 
@@ -266,8 +350,6 @@ const AdminTicketAnalytics = () => {
       <h1 className="text-3xl font-bold text-white">
         Ticket Management
       </h1>
-
-     
 
       <div className="grid grid-cols-4 gap-6">
 
@@ -284,7 +366,7 @@ const AdminTicketAnalytics = () => {
 
       </div>
 
-      
+     
 
       <div className="grid grid-cols-3 gap-10">
 
@@ -361,7 +443,7 @@ const AdminTicketAnalytics = () => {
 
       </div>
 
-     
+      
 
       <div className="flex gap-4">
 
@@ -383,7 +465,7 @@ const AdminTicketAnalytics = () => {
 
       </div>
 
-    
+     
 
       <div className="bg-[#0f172a] rounded-xl p-6 shadow-lg space-y-4">
 
@@ -429,7 +511,8 @@ const AdminTicketAnalytics = () => {
                   key={user.nr_auth_user_id}
                   value={user.nr_auth_user_id}
                 >
-                  {user.nr_name} ({user.nr_email})
+                  {/* {user.nr_name} ({user.nr_email}) */}
+                  {user.nr_name} • {user.role === "admin" ? "Admin" : "User"} ({user.nr_email})
                 </option>
               ))}
 
