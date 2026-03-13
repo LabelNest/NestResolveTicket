@@ -50,6 +50,7 @@ const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
 type NrUser = {
   nr_auth_user_id: string;
   nr_name: string;
+  nr_email: string;
 };
 
 // --- Component ---
@@ -88,7 +89,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     const loadUsers = async () => {
       const { data } = await supabase
         .from('nr_users')
-        .select('nr_auth_user_id, nr_name')
+        .select('nr_auth_user_id, nr_name, nr_email')
         .eq('nr_status', 'active');
       setUsers(data || []);
     };
@@ -222,7 +223,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               <option value="">Assign</option>
               {users.map(u => (
                 <option key={u.nr_auth_user_id} value={u.nr_auth_user_id}>
-                  {u.nr_name}
+                  {u.nr_name} {u.nr_email ? `(${u.nr_email})` : ''}
                 </option>
               ))}
             </select>
