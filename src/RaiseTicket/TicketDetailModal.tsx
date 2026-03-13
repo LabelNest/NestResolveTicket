@@ -31,6 +31,17 @@ interface TicketDetailModalProps {
   isExternal?: boolean;
 }
 
+interface TicketComment {
+  id: string;
+  ticket_id: string;
+  issue_origin: string;
+  comment: string;
+  created_by: string;
+  created_by_name: string;
+  created_by_email: string;
+  created_at: string;
+}
+
 // --- Priority config with colors ---
 const PRIORITY_OPTIONS: { value: Priority; label: string; color: string; dot: string }[] = [
   { value: Priority.CRITICAL, label: 'Urgent', color: '#dc2626', dot: 'bg-red-500' },
@@ -138,6 +149,43 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setSaving(false);
   };
 
+ const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: userDetails } = await supabase
+      .from("nr_users")
+      .select("nr_name, nr_email")
+      .eq("nr_auth_user_id", user.id)
+      .single();
+
+    const commentData = {
+      ticket_id: ticket.id,
+      issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
+      comment: newComment.trim(),
+      created_by: user.id,
+      created_by_name: userDetails?.nr_name || 'Unknown',
+      created_by_email: userDetails?.nr_email || user.email || 'Unknown',
+    };
+
+    const { data, error } = await supabase
+      .from('nr_ticket_comments')
+      .insert([commentData])
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Failed to post comment');
+      console.error(error);
+    } else if (data) {
+      setComments(prev => [...prev, data]);
+      setNewComment('');
+      toast.success('Comment posted');
+    }
+  };
+  
   const addChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
     setChecklist(prev => [
