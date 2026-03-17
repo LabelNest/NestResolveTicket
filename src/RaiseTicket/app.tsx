@@ -59,7 +59,8 @@ const App: React.FC = () => {
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   
 //Ticket initializaing
   useEffect(() => {
@@ -528,14 +529,18 @@ const filteredTickets = useMemo(() => {
       )}
       
       {/* Ticket Detail Modal (Admin only) */}
-        {isOpen && selectedTicket && (
-          <TicketDetailModal
-            ticket={selectedTicket}
-            onClose={() => setIsOpen(false)}
-            onSave={handleUpdateTicket}
-            isAdmin={true}
-          />
-        )}
+      {selectedTicket && (
+        <TicketDetailModal
+          ticket={selectedTicket}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedTicket(null);
+          }}
+          onSave={handleUpdateTicket}
+          isAdmin={true}
+        />
+      )}
     </div>
   );
 };
@@ -580,9 +585,9 @@ const KanbanColumn: React.FC<{
   <div
     key={ticket.id}
     onClick={() => {
-    console.log("CLICKED", ticket);   // ✅ DEBUG
-    setSelectedTicket(ticket);
-    setIsOpen(true);
+        setSelectedTicket(ticket);
+        setIsModalOpen(true);
+
   }}
     className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
   >
