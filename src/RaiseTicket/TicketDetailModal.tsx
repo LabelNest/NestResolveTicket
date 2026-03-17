@@ -77,6 +77,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   isExternal = false,
   isAdmin = false,
 }) => {
+  
   // Editable state
   const [title, setTitle] = useState(ticket.title);
   const [description, setDescription] = useState(ticket.description ?? '');
@@ -101,7 +102,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const isReadOnly = !isAdmin;
   const isCreator = currentUserId === ticket.created_by;
   const canComment = isAdmin || isCreator;
-
+  const [priority, setPriority] = useState(ticket.priority || "medium");
+  
   // Labels derived from ticket
   const labels: { text: string; color: string }[] = [];
   if (ticket.department) labels.push({ text: ticket.department, color: '#0ea5e9' });
@@ -139,9 +141,9 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       }
       setLoadingComments(false);
     };
-    if (isOpen) {
-      loadComments();
-    }
+    if (isOpen && ticket?.id) {
+        loadComments();
+}
   }, [ticket.id, isOpen]);
 
   // Reset state when ticket changes
@@ -149,7 +151,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setTitle(ticket.title);
     setDescription(ticket.description ?? '');
     setStatus(ticket.status);
-    setPriority(ticket.priority);
+    setPriority(ticket.priority || 'medium');
     setAssignedTo(ticket.assigned_to);
     setNotes('');
     setChecklist([]);
@@ -198,6 +200,40 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       .eq("nr_auth_user_id", user.id)
       .single();
 
+    //comment function
+    const handleAddComment = async () => {
+      if (!notes.trim()) return;
+    
+      const currentUser = users.find(
+        (u) => u.nr_auth_user_id === currentUserId
+      );
+    
+      const { error } = await supabase
+        .from('nr_ticket_comments')
+        .insert([
+          {
+            ticket_id: ticket.id,
+            issue_origin: ticket.issue_origin,
+            comment: notes,
+            created_by: currentUserId,
+            created_by_name: currentUser?.nr_name,
+            created_by_email: currentUser?.nr_email,
+          },
+        ]);
+    
+      if (!error) {
+        setComments([
+          ...comments,
+          {
+            comment: notes,
+            created_by_name: currentUser?.nr_name,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        setNotes('');
+      }
+    };
+        
     const commentData = {
       ticket_id: ticket.id,
       issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
@@ -352,6 +388,71 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                 ))}
               </select>
             </div>
+            
+
+            {/* ─── COMMENTS SECTION ─── */}
+            <div className="mt-6 border-t border-[#333] pt-4">
+            
+              <h3 className="text-sm font-semibold text-white mb-3">
+                Comments
+              </h3>
+            
+              {/* Comment List */}
+              <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
+                {comments.map((c, i) => (
+                  <div key={i} className="bg-[#2d2d2d] p-3 rounded-md text-sm">
+                    <div className="text-white font-medium">
+                      {c.created_by_name}
+                    </div>
+            
+                    <div className="text-[#ccc] mt-1">
+                      {c.comment}
+                    </div>
+            
+                    <div className="text-xs text-[#777] mt-1">
+                      {new Date(c.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+  {/* Add Comment */}
+  <div className="flex gap-2">
+    <input
+      value={notes}
+      onChange={(e) => setNotes(e.target.value)}
+      placeholder="Add a comment..."
+      className="flex-1 bg-[#2d2d2d] border border-[#444] text-white px-3 py-2 rounded-md text-sm outline-none"
+    />
+
+    <button
+      onClick={handleAddComment}
+      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
+    >
+      Add
+    </button>
+  </div>
+
+</div>
+
+            {/* Priority */}
+              <div>
+                <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
+                  Priority
+                </label>
+              
+                <select
+                  value={priority}
+                  onChange={e => setPriority(e.target.value)}
+                  disabled={isReadOnly}
+                  className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
 
             {/* Progress */}
             <div>
