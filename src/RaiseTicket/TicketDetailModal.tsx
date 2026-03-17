@@ -108,7 +108,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   if (ticket.department) labels.push({ text: ticket.department, color: '#0ea5e9' });
   if (ticket.types) labels.push({ text: ticket.types, color: '#8b5cf6' });
   if (ticket.type) labels.push({ text: ticket.type, color: '#f59e0b' });
-  if (!isOpen || !ticket) return null;
+  if (!ticket) return null;
   
   // Load users for assignment
   useEffect(() => {
