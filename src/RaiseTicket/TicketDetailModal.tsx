@@ -284,7 +284,6 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const assignedUser = users.find(u => u.nr_auth_user_id === assignedTo);
   const currentPriority = PRIORITY_OPTIONS.find(p => p.value === priority);
 
-  if (!isOpen) return null;
 
   return (
     <>
