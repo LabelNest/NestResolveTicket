@@ -530,10 +530,8 @@ const filteredTickets = useMemo(() => {
         {isOpen && selectedTicket && (
           <TicketDetailModal
             ticket={selectedTicket}
-            isOpen={isOpen}
             onClose={() => setIsOpen(false)}
-            onSave={handleUpdateTicket}   // ✅ MUST
-            isAdmin={true}
+            onSave={handleUpdateTicket}
           />
         )}
     </div>
