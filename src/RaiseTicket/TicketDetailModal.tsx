@@ -82,7 +82,6 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [title, setTitle] = useState(ticket.title);
   const [description, setDescription] = useState(ticket.description ?? '');
   const [status, setStatus] = useState<TicketStatus>(ticket.status);
-  const [priority, setPriority] = useState<Priority>(ticket.priority);
   const [assignedTo, setAssignedTo] = useState<string | null>(ticket.assigned_to);
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
