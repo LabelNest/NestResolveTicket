@@ -182,7 +182,10 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       console.error(error);
     } else {
       toast.success('Ticket updated');
-      onSave(ticket.id, updates);
+        onSave(ticket.id, {
+    status,
+    priority,   // ✅ include this
+  });
     }
     setSaving(false);
   };
