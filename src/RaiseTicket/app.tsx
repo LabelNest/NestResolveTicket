@@ -253,7 +253,7 @@ const filteredTickets = useMemo(() => {
     setTickets(prev =>
       prev.map(t => (t.id === ticketId ? { ...t, ...updated } : t))
     );
-    setSelectedTicket(null);
+    setIsOpen(false);
   };
 
   
@@ -525,15 +525,15 @@ const filteredTickets = useMemo(() => {
       )}
       
       {/* Ticket Detail Modal (Admin only) */}
-      {selectedTicket && (
-        <TicketDetailModal
-          ticket={selectedTicket}
-          isOpen={!!selectedTicket}
-          onClose={() => setSelectedTicket(null)}
-          onSave={handleUpdateTicket}
-          isExternal={selectedTeam === 'External Issues'}
-        />
-      )}
+        {isOpen && selectedTicket && (
+          <TicketDetailModal
+            ticket={selectedTicket}
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            onSave={handleUpdateTicket}   // ✅ MUST
+            isAdmin={true}
+          />
+        )}
     </div>
   );
 };
