@@ -58,7 +58,9 @@ const App: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"board" | "all">("board");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
+  
 //Ticket initializaing
   useEffect(() => {
   const initializePage = async () => {
