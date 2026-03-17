@@ -534,6 +534,7 @@ const filteredTickets = useMemo(() => {
             onClose={() => setIsOpen(false)}
             onSave={handleUpdateTicket}
             isAdmin={true}
+            console.log("MODAL STATE:", isOpen, selectedTicket);
           />
         )}
     </div>
@@ -579,7 +580,11 @@ const KanbanColumn: React.FC<{
       {tickets.map(ticket => (
   <div
     key={ticket.id}
-    onClick={() => handleTicketClick(ticket)} 
+    onClick={() => {
+    console.log("CLICKED", ticket);   // ✅ DEBUG
+    setSelectedTicket(ticket);
+    setIsOpen(true);
+  }}
     className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
   >
           <div className="text-sm font-medium text-slate-700 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
