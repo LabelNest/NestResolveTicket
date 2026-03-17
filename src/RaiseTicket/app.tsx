@@ -534,7 +534,6 @@ const filteredTickets = useMemo(() => {
             onClose={() => setIsOpen(false)}
             onSave={handleUpdateTicket}
             isAdmin={true}
-            console.log("MODAL STATE:", isOpen, selectedTicket);
           />
         )}
     </div>
