@@ -246,18 +246,18 @@ const filteredTickets = useMemo(() => {
 }, [tickets, searchQuery]);
 
   //for edit admin part
-  const handleTicketClick = (ticket: Ticket) => {
-    if (isAdmin) {
-      setSelectedTicket(ticket);
-      setIsOpen(true);
-    }
-  };
+    const handleTicketClick = (ticket: Ticket) => {
+      if (isAdmin) {
+        setSelectedTicket(ticket);
+        setIsModalOpen(true); // ✅ FIXED
+      }
+    };
 
   const handleUpdateTicket = (ticketId: string, updated: Partial<Ticket>) => {
     setTickets(prev =>
       prev.map(t => (t.id === ticketId ? { ...t, ...updated } : t))
     );
-    setIsOpen(false);
+    setIsModalOpen(false);
   };
 
   
@@ -584,10 +584,8 @@ const KanbanColumn: React.FC<{
       {tickets.map(ticket => (
   <div
     key={ticket.id}
-    onClick={() => {
-        setSelectedTicket(ticket);
-        setIsModalOpen(true);
-
+    onClick={() => onTicketClick(ticket)}
+    
   }}
     className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
   >
