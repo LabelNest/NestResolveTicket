@@ -585,8 +585,6 @@ const KanbanColumn: React.FC<{
   <div
     key={ticket.id}
     onClick={() => onTicketClick(ticket)}
-    
-  }}
     className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
   >
           <div className="text-sm font-medium text-slate-700 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
