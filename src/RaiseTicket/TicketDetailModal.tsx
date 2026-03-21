@@ -100,7 +100,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
 
   const isReadOnly = !isAdmin;
   const isCreator = currentUserId === ticket.created_by;
-  const canComment = isAdmin || isCreator;
+  const canComment = currentUserId === ticket.created_by;
   const [priority, setPriority] = useState(ticket.priority || "medium");
   
   // Labels derived from ticket
@@ -204,8 +204,6 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       .single();
 
     //comment function
-    const handleAddComment = async () => {
-      if (!notes.trim()) return;
     
       const currentUser = users.find(
         (u) => u.nr_auth_user_id === currentUserId
