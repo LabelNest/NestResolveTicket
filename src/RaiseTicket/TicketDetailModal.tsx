@@ -424,13 +424,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       placeholder="Add a comment..."
       className="flex-1 bg-[#2d2d2d] border border-[#444] text-white px-3 py-2 rounded-md text-sm outline-none"
     />
-
-    <button
-      onClick={handleAddComment}
-      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
-    >
-      Add
-    </button>
+    
   </div>
 
 </div>
