@@ -191,17 +191,38 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setSaving(false);
   };
 
-  const handlePostComment = async () => {
-    if (!newComment.trim() || !canComment) return;
+const handlePostComment = async () => {
+  if (!newComment.trim() || !canComment) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-    const { data: userDetails } = await supabase
-      .from("nr_users")
-      .select("nr_name, nr_email")
-      .eq("nr_auth_user_id", user.id)
-      .single();
+  const { data: userDetails } = await supabase
+    .from("nr_users")
+    .select("nr_name, nr_email")
+    .eq("nr_auth_user_id", user.id)
+    .single();
+
+  const commentData = {
+    ticket_id: ticket.id,
+    issue_origin: isExternal ? 'external' : 'INTERNAL',
+    comment: newComment.trim(),
+    created_by: user.id,
+    created_by_name: userDetails?.nr_name || 'Unknown',
+    created_by_email: userDetails?.nr_email || user.email || 'Unknown',
+  };
+
+  const { data, error } = await supabase
+    .from('nr_ticket_comments')
+    .insert([commentData])
+    .select()
+    .single();
+
+  if (!error && data) {
+    setComments(prev => [...prev, data]);
+    setNewComment('');
+  }
+};;
 
     //comment function
     
