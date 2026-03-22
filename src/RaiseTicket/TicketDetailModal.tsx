@@ -218,44 +218,16 @@ const handlePostComment = async () => {
     .select()
     .single();
 
-  if (!error && data) {
+  if (error) {
+    toast.error('Failed to post comment');
+  } else if (data) {
     setComments(prev => [...prev, data]);
     setNewComment('');
+    toast.success('Comment posted');
   }
 };;
 
     //comment function
-    
-      const currentUser = users.find(
-        (u) => u.nr_auth_user_id === currentUserId
-      );
-    
-      const { error } = await supabase
-        .from('nr_ticket_comments')
-        .insert([
-          {
-            ticket_id: ticket.id,
-            issue_origin: ticket.issue_origin,
-            comment: notes,
-            created_by: currentUserId,
-            created_by_name: currentUser?.nr_name,
-            created_by_email: currentUser?.nr_email,
-          },
-        ]);
-    
-      if (!error) {
-        setComments([
-          ...comments,
-          {
-            comment: notes,
-            created_by_name: currentUser?.nr_name,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-        setNotes('');
-      }
-    };
-        
     const commentData = {
       ticket_id: ticket.id,
       issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
