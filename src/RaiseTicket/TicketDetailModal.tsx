@@ -227,32 +227,7 @@ const handlePostComment = async () => {
   }
 };;
 
-    //comment function
-    const commentData = {
-      ticket_id: ticket.id,
-      issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
-      comment: newComment.trim(),
-      created_by: user.id,
-      created_by_name: userDetails?.nr_name || 'Unknown',
-      created_by_email: userDetails?.nr_email || user.email || 'Unknown',
-    };
-
-    const { data, error } = await supabase
-      .from('nr_ticket_comments')
-      .insert([commentData])
-      .select()
-      .single();
-
-    if (error) {
-      toast.error('Failed to post comment');
-      console.error(error);
-    } else if (data) {
-      setComments(prev => [...prev, data]);
-      setNewComment('');
-      toast.success('Comment posted');
-    }
-  };
-
+  
   const addChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
     setChecklist(prev => [
