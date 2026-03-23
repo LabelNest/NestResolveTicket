@@ -203,14 +203,15 @@ const handlePostComment = async () => {
     .eq("nr_auth_user_id", user.id)
     .single();
 
-  const commentData = {
-    ticket_id: ticket.id,
-    issue_origin: isExternal ? 'external' : 'INTERNAL',
-    comment: newComment.trim(),
-    created_by: user.id,
-    created_by_name: userDetails?.nr_name || 'Unknown',
-    created_by_email: userDetails?.nr_email || user.email || 'Unknown',
-  };
+    const commentData = {
+      ticket_id: ticket.id,
+      issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
+      comment: newComment.trim(),
+      created_by: user.id,
+      created_by_name: userDetails?.nr_name || 'Unknown',
+      created_by_email: userDetails?.nr_email || user.email || 'Unknown',
+      created_at: new Date().toISOString(),
+    };
 
   const { data, error } = await supabase
     .from('nr_ticket_comments')
