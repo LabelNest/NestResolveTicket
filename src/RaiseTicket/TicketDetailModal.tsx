@@ -192,26 +192,23 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   };
 
 const handlePostComment = async () => {
-  if (!newComment.trim() || !canComment) return;
+  if (!newComment.trim()) return;
+
+  // ✅ Only creator can comment
+  if (currentUserId !== ticket.created_by) {
+    toast.error("Only ticket creator can comment");
+    return;
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { data: userDetails } = await supabase
-    .from("nr_users")
-    .select("nr_name, nr_email")
-    .eq("nr_auth_user_id", user.id)
-    .single();
-
-    const commentData = {
-      ticket_id: ticket.id,
-      issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
-      comment: newComment.trim(),
-      created_by: user.id,
-      created_by_name: userDetails?.nr_name || 'Unknown',
-      created_by_email: userDetails?.nr_email || user.email || 'Unknown',
-      created_at: new Date().toISOString(),
-    };
+  const commentData = {
+    ticket_id: ticket.id,
+    comment: newComment.trim(),
+    created_by: user.id,
+    created_at: new Date().toISOString(),
+  };
 
   const { data, error } = await supabase
     .from('nr_ticket_comments')
@@ -220,14 +217,15 @@ const handlePostComment = async () => {
     .single();
 
   if (error) {
-    toast.error('Failed to post comment');
-  } else if (data) {
-    setComments(prev => [...prev, data]);
-    setNewComment('');
-    toast.success('Comment posted');
+    console.log("Comment error:", error);
+    toast.error(error.message);
+    return;
   }
-};;
 
+  setComments(prev => [...prev, data]);
+  setNewComment('');
+  toast.success('Comment posted');
+};
   
   const addChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
