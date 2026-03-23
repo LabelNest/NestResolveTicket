@@ -103,6 +103,10 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const canComment = currentUserId === ticket.created_by;
   const [priority, setPriority] = useState(ticket.priority || "medium");
   
+  //admin part
+  const isAdmin = userRole === "admin"; // or however you store role
+  const isCreator = currentUserId === ticket.created_by;
+  
   // Labels derived from ticket
   const labels: { text: string; color: string }[] = [];
   if (ticket.department) labels.push({ text: ticket.department, color: '#0ea5e9' });
@@ -401,6 +405,7 @@ const handlePostComment = async () => {
     <input
       value={notes}
       onChange={(e) => setNotes(e.target.value)}
+      disabled={true}
       placeholder="Add a comment..."
       className="flex-1 bg-[#2d2d2d] border border-[#444] text-white px-3 py-2 rounded-md text-sm outline-none"
     />
@@ -418,7 +423,7 @@ const handlePostComment = async () => {
                 <select
                   value={priority}
                   onChange={e => setPriority(e.target.value)}
-                  disabled={isReadOnly}
+                  disabled={!(isAdmin || isCreator)}
                   className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2 border border-[#444] focus:border-blue-500 outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   <option value="low">Low</option>
@@ -662,38 +667,38 @@ const handlePostComment = async () => {
             </div>
 
             {/* Post Comment Input */}
-            {canComment ? (
-              <div className="flex gap-3 items-start">
-                <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center shrink-0">
-                  <UserPlus size={14} className="text-[#888]" />
+              {isCreator ? (
+                <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center shrink-0">
+                    <UserPlus size={14} className="text-[#888]" />
+                  </div>
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Write a comment..."
+                      className="w-full bg-[#252525] text-white text-sm rounded-lg px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors min-h-[80px]"
+                    />
+                    <button
+                      onClick={handlePostComment}
+                      disabled={!newComment.trim()}
+                      className="mt-2 px-4 py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed float-right"
+                    >
+                      Post Comment
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 relative">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="w-full bg-[#252525] text-white text-sm rounded-lg px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors min-h-[80px]"
-                  />
-                  <button
-                    onClick={handlePostComment}
-                    disabled={!newComment.trim()}
-                    className="mt-2 px-4 py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed float-right"
-                  >
-                    Post Comment
-                  </button>
+              ) : (
+                <div className="bg-[#2a2a2a] border border-[#333] rounded-lg p-4 flex items-center gap-3">
+                  <AlertCircle size={18} className="text-orange-500 shrink-0" />
+                  <p className="text-xs text-[#999]">
+                    Only the creator of this ticket can post comments.
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-[#2a2a2a] border border-[#333] rounded-lg p-4 flex items-center gap-3">
-                <AlertCircle size={18} className="text-orange-500 shrink-0" />
-                <p className="text-xs text-[#999]">
-                  Only the creator of this ticket can post comments.
-                </p>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* ─── METADATA (read-only) ─── */}
+            
+                        {/* ─── METADATA (read-only) ─── */}
           <div className="border-t border-[#333] pt-6 mt-6 space-y-2">
             <p className="text-xs text-[#666]">
               <span className="text-[#888]">Created by:</span>{' '}
