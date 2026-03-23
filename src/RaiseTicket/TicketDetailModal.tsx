@@ -98,9 +98,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [loadingComments, setLoadingComments] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const isAdmin = userRole === "admin"; // or however you store role
   const isCreator = currentUserId === ticket.created_by;
-  
   const isReadOnly = !isAdmin;
   const canComment = isCreator;
   const [priority, setPriority] = useState(ticket.priority || "medium");
@@ -665,37 +663,38 @@ const handlePostComment = async () => {
               )}
             </div>
 
-            {/* Post Comment Input */}
-              {isCreator ? (
-                <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center shrink-0">
-                    <UserPlus size={14} className="text-[#888]" />
+         <div>
+                {/* Post Comment Input */}
+                {isCreator ? (
+                  <div className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center shrink-0">
+                      <UserPlus size={14} className="text-[#888]" />
+                    </div>
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Write a comment..."
+                        className="w-full bg-[#252525] text-white text-sm rounded-lg px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors min-h-[80px]"
+                      />
+                      <button
+                        onClick={handlePostComment}
+                        disabled={!newComment.trim()}
+                        className="mt-2 px-4 py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed float-right"
+                      >
+                        Post Comment
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1 relative">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Write a comment..."
-                      className="w-full bg-[#252525] text-white text-sm rounded-lg px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors min-h-[80px]"
-                    />
-                    <button
-                      onClick={handlePostComment}
-                      disabled={!newComment.trim()}
-                      className="mt-2 px-4 py-1.5 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed float-right"
-                    >
-                      Post Comment
-                    </button>
+                ) : (
+                  <div className="bg-[#2a2a2a] border border-[#333] rounded-lg p-4 flex items-center gap-3">
+                    <AlertCircle size={18} className="text-orange-500 shrink-0" />
+                    <p className="text-xs text-[#999]">
+                      Only the creator of this ticket can post comments.
+                    </p>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-[#2a2a2a] border border-[#333] rounded-lg p-4 flex items-center gap-3">
-                  <AlertCircle size={18} className="text-orange-500 shrink-0" />
-                  <p className="text-xs text-[#999]">
-                    Only the creator of this ticket can post comments.
-                  </p>
-                </div>
-              )}
-
+                )}
+              </div>
             
                         {/* ─── METADATA (read-only) ─── */}
           <div className="border-t border-[#333] pt-6 mt-6 space-y-2">
