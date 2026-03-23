@@ -99,7 +99,6 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const isReadOnly = !isAdmin;
-  const isCreator = currentUserId === ticket.created_by;
   const canComment = currentUserId === ticket.created_by;
   const [priority, setPriority] = useState(ticket.priority || "medium");
   
