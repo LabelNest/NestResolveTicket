@@ -159,6 +159,26 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setDueDate('');
   }, [ticket.id]);
 
+//fetch comments
+  useEffect(() => {
+  const fetchComments = async () => {
+    if (!ticket?.id) return;
+
+    const { data, error } = await supabase
+      .from('nr_ticket_comments')
+      .select('*')
+      .eq('ticket_id', ticket.id)
+      .order('created_at', { ascending: true });
+
+    if (!error) {
+      setComments(data || []);
+    }
+  };
+
+  fetchComments();
+}, [ticket]);
+
+  
   // --- Handlers ---
 
   const handleSave = async () => {
@@ -203,16 +223,15 @@ const handlePostComment = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  const commentData = {
-    ticket_id: ticket.id,
-    comment: newComment.trim(),
-    created_by: user.id,
-    created_at: new Date().toISOString(),
-  };
-
   const { data, error } = await supabase
     .from('nr_ticket_comments')
-    .insert([commentData])
+    .insert([
+      {
+        ticket_id: ticket.id,   // 🔥 must match FK type
+        comment: newComment.trim(),
+        created_by: user.id,
+      },
+    ])
     .select()
     .single();
 
@@ -224,8 +243,9 @@ const handlePostComment = async () => {
 
   setComments(prev => [...prev, data]);
   setNewComment('');
-  toast.success('Comment posted');
+  toast.success("Comment added");
 };
+
   
   const addChecklistItem = () => {
     if (!newChecklistItem.trim()) return;
@@ -365,23 +385,16 @@ const handlePostComment = async () => {
               </h3>
             
               {/* Comment List */}
-              <div className="space-y-3 max-h-60 overflow-y-auto mb-4">
-                {comments.map((c, i) => (
-                  <div key={i} className="bg-[#2d2d2d] p-3 rounded-md text-sm">
-                    <div className="text-white font-medium">
-                      {c.created_by_name}
-                    </div>
-            
-                    <div className="text-[#ccc] mt-1">
-                      {c.comment}
-                    </div>
-            
-                    <div className="text-xs text-[#777] mt-1">
-                      {new Date(c.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      <div className="mt-4 space-y-2">
+                        {comments.map((c, index) => (
+                          <div key={index} className="p-2 border rounded-md">
+                            <p className="text-sm">{c.comment}</p>
+                            <p className="text-xs text-gray-400">
+                              {new Date(c.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
 
   {/* Add Comment */}
   <div className="flex gap-2">
