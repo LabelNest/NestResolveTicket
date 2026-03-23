@@ -98,13 +98,13 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [loadingComments, setLoadingComments] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const isReadOnly = !isAdmin;
-  const canComment = currentUserId === ticket.created_by;
-  const [priority, setPriority] = useState(ticket.priority || "medium");
-  
-  //admin part
   const isAdmin = userRole === "admin"; // or however you store role
   const isCreator = currentUserId === ticket.created_by;
+  
+  const isReadOnly = !isAdmin;
+  const canComment = isCreator;
+  const [priority, setPriority] = useState(ticket.priority || "medium");
+
   
   // Labels derived from ticket
   const labels: { text: string; color: string }[] = [];
