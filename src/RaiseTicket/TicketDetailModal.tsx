@@ -717,7 +717,6 @@ const handlePostComment = async () => {
               <span className="text-[#888]">Ticket ID:</span>{' '}
               #{ticket.id.slice(0, 8)}
             </p>
-          </div>
         </div>
 
         {/* ─── FOOTER ─── */}
@@ -739,7 +738,7 @@ const handlePostComment = async () => {
           )}
         </div>
       </div>
-    </div>
+</>
   );
 };
 
