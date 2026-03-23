@@ -738,8 +738,7 @@ const handlePostComment = async () => {
           )}
         </div>
       </div>
-</>
+    </div>    
   );
-};
 
 export default TicketDetailModal;
