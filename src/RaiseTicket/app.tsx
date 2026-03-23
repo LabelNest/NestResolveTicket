@@ -213,7 +213,7 @@ const handleCreateTicket = async (formData: any) => {
     created_by_name: userDetails?.nr_name ?? null,   // ✅ Correct name
     created_by_email: userDetails?.nr_email ?? null, // ✅ Correct email
     tenant_id: user.id,
-    types: internalType //added classification
+    types: selectedTeam //added classification
   };
 
   console.log("INSERT PAYLOAD:", payload);
