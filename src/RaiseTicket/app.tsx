@@ -197,7 +197,7 @@ const handleCreateTicket = async (formData: any) => {
 
   //classification
   const category = selectedType?.label;
-  const internalType = getInternalType(category ?? "");
+  const internalType = selectedType?.ticket_type;
 
   
   // 4️⃣ Correct payload
