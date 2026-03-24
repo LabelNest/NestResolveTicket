@@ -719,6 +719,7 @@ const handlePostComment = async () => {
             </p>
         </div>
 
+       </div>     
         {/* ─── FOOTER ─── */}
         <div className="px-6 py-4 border-t border-[#333] flex items-center justify-between shrink-0">
           <button
@@ -737,9 +738,10 @@ const handlePostComment = async () => {
             </button>
           )}
         </div>
+
+          
       </div>
     </div>
-  </div>
   );
 };
 
