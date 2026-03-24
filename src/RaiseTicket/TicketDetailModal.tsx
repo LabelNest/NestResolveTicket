@@ -559,7 +559,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                         <textarea
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            disabled={isReadOnly}
+                            disabled={true}
                             rows={5}
                             placeholder="Type a description or add notes here"
                             className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666] disabled:opacity-70 disabled:cursor-not-allowed"
