@@ -739,6 +739,7 @@ const handlePostComment = async () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
