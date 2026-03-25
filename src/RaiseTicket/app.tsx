@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"; // admin navigate
 import { Shield } from "lucide-react";
 import { X, ChevronRight, ArrowLeft } from "lucide-react";
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import {
   Ticket,
   TicketStatus,
@@ -18,12 +18,9 @@ import {
   Plus,
   Search,
   Layout,
-  ClipboardList,
   Settings,
   User,
   Filter,
-  ChevronRight,
-  X,
   Paperclip,
   CheckCircle2,
   Clock,
@@ -35,7 +32,7 @@ import {
 } from 'lucide-react';
 import TicketList from './ticketlist';
 import TicketDetailModal from './TicketDetailModal'; // admin edit part
-import AdminApprovals from "@/pages/AdminApprovals";
+import AdminApprovals from "../pages/AdminApprovals";
 import { ClipboardList, Globe } from "lucide-react"; // for external logo
 import { toast } from 'sonner';
 
@@ -61,82 +58,82 @@ const App: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  
-//Ticket initializaing
+
+  //Ticket initializaing
   useEffect(() => {
-  const initializePage = async () => {
-    try {
+    const initializePage = async () => {
+      try {
 
-      // ✅ Clear old tickets immediately
-      setTickets([]);
+        // ✅ Clear old tickets immediately
+        setTickets([]);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      if (!session) return;
+        if (!session) return;
 
-      const { data: admin } = await supabase
-        .from("nr_admins")
-        .select("nr_id")
-        .eq("nr_email", session.user.email)
-        .maybeSingle();
+        const { data: admin } = await supabase
+          .from("nr_admins")
+          .select("nr_id")
+          .eq("nr_email", session.user.email)
+          .maybeSingle();
 
-      if (admin) setIsAdmin(true);
+        if (admin) setIsAdmin(true);
 
-      // 🔹 External Issues
-      if (selectedTeam === "External Issues") {
-        const { data, error } = await supabase
-          .from("nr_resolve_tickets")
-          .select("*")
-          .order("created_at", { ascending: false });
+        // 🔹 External Issues
+        if (selectedTeam === "External Issues") {
+          const { data, error } = await supabase
+            .from("nr_resolve_tickets")
+            .select("*")
+            .order("created_at", { ascending: false });
 
-        if (!error) setTickets(data || []);
-        return;
-      }
+          if (!error) setTickets(data || []);
+          return;
+        }
 
-      // 🔹 Internal team filtering
-      if (selectedTeam) {
-        const departments = mapTeamToDepartments(selectedTeam);
+        // 🔹 Internal team filtering
+        if (selectedTeam) {
+          const departments = mapTeamToDepartments(selectedTeam);
 
-        const { data, error } = await supabase
-          .from("nr_tickets_internal")
-          .select(`
+          const { data, error } = await supabase
+            .from("nr_tickets_internal")
+            .select(`
             *,
             user:nr_users!nr_tickets_demo_created_by_fkey (
               nr_name,
               nr_email
             )
           `)
-          .in("department", departments)
-          .order("created_at", { ascending: false });
+            .in("department", departments)
+            .order("created_at", { ascending: false });
 
-        if (!error) setTickets(data || []);
-        return;
-      }
+          if (!error) setTickets(data || []);
+          return;
+        }
 
-      // 🔹 ALL ISSUES / BOARD
-      const { data, error } = await supabase
-        .from("nr_tickets_internal")
-        .select(`
+        // 🔹 ALL ISSUES / BOARD
+        const { data, error } = await supabase
+          .from("nr_tickets_internal")
+          .select(`
           *,
           user:nr_users!nr_tickets_demo_created_by_fkey (
             nr_name,
             nr_email
           )
         `)
-        .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false });
 
-      if (!error) setTickets(data || []);
+        if (!error) setTickets(data || []);
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  initializePage();
-}, [selectedTeam]);
-  
+    initializePage();
+  }, [selectedTeam]);
+
 
   // --- Logic ---
   const handleOpenRaiseTicket = () => {
@@ -148,110 +145,108 @@ const App: React.FC = () => {
     setModalState('form');
   };
 
-  
-
-//classification function
-function mapTeamToDepartments(team: string) {
-  switch (team) {
-    case "Data Team":
-      return ["Data Engineering", "QA/QC"];
-
-    case "HR Ops":
-      return ["HR Ops", "Operations"];
-
-    case "IT/Infra":
-      return ["IT / Infra", "Product Support", "Product Roadmap"];
-
-    default:
-      return [];
-  }
-}
 
 
-  
-const handleCreateTicket = async (formData: any) => {
-  // 1️⃣ Get logged-in auth user
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  //classification function
+  function mapTeamToDepartments(team: string) {
+    switch (team) {
+      case "Data Team":
+        return ["Data Engineering", "QA/QC"];
 
-  if (!user) return;
+      case "HR Ops":
+        return ["HR Ops", "Operations"];
 
-  // 2️⃣ Fetch user details from nr_users table
-  const { data: userDetails, error: userError } = await supabase
-    .from("nr_users")
-    .select("nr_name, nr_email")
-    .eq("nr_auth_user_id", user.id)
-    .single();
+      case "IT/Infra":
+        return ["IT / Infra", "Product Support", "Product Roadmap"];
 
-  if (userError) {
-    console.error("Error fetching user details:", userError);
-    return;
+      default:
+        return [];
+    }
   }
 
-  // 3️⃣ Auto-generate title
-  const generatedTitle =
-    selectedType?.label +
-    " - " +
-    (formData.description?.slice(0, 30) || "New Issue");
 
-  //classification
-  const category = selectedType?.label;
-  const internalType = selectedType?.ticket_type;
 
-  
-  // 4️⃣ Correct payload
-  const payload = {
-    title: generatedTitle,
-    description: formData.description ?? null,
-    department: selectedType?.default_team ?? null,
-    type: selectedType?.ticket_type ?? null,
-    issue_origin: "INTERNAL",
-    priority: "MEDIUM",
-    status: TicketStatus.TODO,
-    created_by: user.id,
-    created_by_name: userDetails?.nr_name ?? null,   // ✅ Correct name
-    created_by_email: userDetails?.nr_email ?? null, // ✅ Correct email
-    tenant_id: user.id,
-    types: selectedTeam //added classification
+  const handleCreateTicket = async (formData: any) => {
+    // 1️⃣ Get logged-in auth user
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    // 2️⃣ Fetch user details from nr_users table
+    const { data: userDetails, error: userError } = await supabase
+      .from("nr_users")
+      .select("nr_name, nr_email")
+      .eq("nr_auth_user_id", user.id)
+      .single();
+
+    if (userError) {
+      console.error("Error fetching user details:", userError);
+      return;
+    }
+
+    // 3️⃣ Auto-generate title
+    const generatedTitle =
+      selectedType?.label +
+      " - " +
+      (formData.description?.slice(0, 30) || "New Issue");
+
+    //classification
+    const category = selectedType?.label;
+    const internalType = selectedType?.ticket_type;
+
+
+    // 4️⃣ Correct payload
+    const payload = {
+      title: generatedTitle,
+      description: formData.description ?? null,
+      department: selectedType?.default_team ?? null,
+      type: selectedType?.ticket_type ?? null,
+      issue_origin: "INTERNAL",
+      priority: "MEDIUM",
+      status: TicketStatus.TODO,
+      created_by: user.id,
+      created_by_name: userDetails?.nr_name ?? null,   // ✅ Correct name
+      created_by_email: userDetails?.nr_email ?? null, // ✅ Correct email
+      tenant_id: user.id,
+      types: selectedTeam //added classification
+    };
+
+    console.log("INSERT PAYLOAD:", payload);
+
+
+
+    // 5️⃣ Insert ticket
+    const { data, error } = await supabase
+      .from("nr_tickets_internal")
+      .insert([payload])
+      .select();
+
+    if (error) {
+      console.error("Insert error:", error);
+      return;
+    }
+
+    if (data) {
+      setTickets(prev => [data[0], ...prev]);
+      setModalState("closed");
+    }
   };
 
-  console.log("INSERT PAYLOAD:", payload);
-
-  
-
-  // 5️⃣ Insert ticket
-  const { data, error } = await supabase
-    .from("nr_tickets_internal")
-    .insert([payload])
-    .select();
-
-  if (error) {
-    console.error("Insert error:", error);
-    return;
-  }
-
-  if (data) {
-    setTickets(prev => [data[0], ...prev]);
-    setModalState("closed");
-  }
-};
-
-const filteredTickets = useMemo(() => {
-  return tickets.filter(t =>
-    (t.title ?? "")
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-}, [tickets, searchQuery]);
+  const filteredTickets = useMemo(() => {
+    return tickets.filter(t =>
+      (t.title ?? "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
+  }, [tickets, searchQuery]);
 
   //for edit admin part
-    const handleTicketClick = (ticket: Ticket) => {
-      if (isAdmin) {
-        setSelectedTicket(ticket);
-        setIsModalOpen(true); // ✅ FIXED
-      }
-    };
+  const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setIsModalOpen(true);
+  };
 
   const handleUpdateTicket = (ticketId: string, updated: Partial<Ticket>) => {
     setTickets(prev =>
@@ -260,7 +255,7 @@ const filteredTickets = useMemo(() => {
     setIsModalOpen(false);
   };
 
-  
+
   return (
     <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
       {/* Sidebar */}
@@ -272,104 +267,104 @@ const filteredTickets = useMemo(() => {
           <span className="font-bold text-xl tracking-tight">NestResolve</span>
         </div>
 
-<nav className="flex-1 px-3 space-y-1">
-  <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">
-    Teams
-  </div>
+        <nav className="flex-1 px-3 space-y-1">
+          <div className="pt-4 pb-2 px-3 text-xs font-semibold uppercase tracking-wider text-blue-200/60">
+            Teams
+          </div>
 
-<NavItem
-  icon={<ClipboardList size={20} />}
-  label="Data Team"
-  onClick={() => {
-    setSelectedTeam("Data Team");
-    setActiveView("board");
-  }}
-  active={selectedTeam === "Data Team"}
-/>
+          <NavItem
+            icon={<ClipboardList size={20} />}
+            label="Data Team"
+            onClick={() => {
+              setSelectedTeam("Data Team");
+              setActiveView("board");
+            }}
+            active={selectedTeam === "Data Team"}
+          />
 
-<NavItem
-  icon={<ClipboardList size={20} />}
-  label="HR Ops"
-  onClick={() => {
-    setSelectedTeam("HR Ops");
-    setActiveView("board");
-  }}
-  active={selectedTeam === "HR Ops"}
-/>
+          <NavItem
+            icon={<ClipboardList size={20} />}
+            label="HR Ops"
+            onClick={() => {
+              setSelectedTeam("HR Ops");
+              setActiveView("board");
+            }}
+            active={selectedTeam === "HR Ops"}
+          />
 
-<NavItem
-  icon={<ClipboardList size={20} />}
-  label="IT/Infra"
-  onClick={() => {
-    setSelectedTeam("IT/Infra");
-    setActiveView("board");
-  }}
-  active={selectedTeam === "IT/Infra"}
-/>
+          <NavItem
+            icon={<ClipboardList size={20} />}
+            label="IT/Infra"
+            onClick={() => {
+              setSelectedTeam("IT/Infra");
+              setActiveView("board");
+            }}
+            active={selectedTeam === "IT/Infra"}
+          />
 
-  
-<NavItem
-  icon={<Kanban size={20} />}
-  label="Board"
-  active={activeView === "board" && !selectedTeam && viewMode === 'kanban'}
-  onClick={() => {
-    setSelectedTeam(null);
-    setViewMode('kanban');
-    setActiveView("board");
-  }}
-/>
 
-<NavItem
-  icon={<List size={20} />}
-  label="All Issues"
-  active={activeView === "board" && !selectedTeam && viewMode === 'list'}
-  onClick={() => {
-    setSelectedTeam(null);
-    setViewMode('list');
-    setActiveView("board");
-  }}
-/>
+          <NavItem
+            icon={<Kanban size={20} />}
+            label="Board"
+            active={activeView === "board" && !selectedTeam && viewMode === 'kanban'}
+            onClick={() => {
+              setSelectedTeam(null);
+              setViewMode('kanban');
+              setActiveView("board");
+            }}
+          />
 
-<NavItem
-  icon={<Globe size={20} />}
-  label="External Issues"
-  onClick={() => {
-    setSelectedTeam("External Issues");
-    setViewMode('kanban');
-    setActiveView("board");
-  }}
-  active={selectedTeam === "External Issues"}
-/>
+          <NavItem
+            icon={<List size={20} />}
+            label="All Issues"
+            active={activeView === "board" && !selectedTeam && viewMode === 'list'}
+            onClick={() => {
+              setSelectedTeam(null);
+              setViewMode('list');
+              setActiveView("board");
+            }}
+          />
 
-</nav>
+          <NavItem
+            icon={<Globe size={20} />}
+            label="External Issues"
+            onClick={() => {
+              setSelectedTeam("External Issues");
+              setViewMode('kanban');
+              setActiveView("board");
+            }}
+            active={selectedTeam === "External Issues"}
+          />
 
-        
-{/* Bottom Section */}
-<div className="p-4 border-t border-blue-800 space-y-2">
+        </nav>
 
-  {/* Switch to Admin Button */}
-  {isAdmin && (
-    <button
-      onClick={() => navigate("/admin/approvals")}
-      className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
-    >
-      <Shield size={20} />
-      <span>Switch to Admin</span>
-    </button>
-  )}
-        
+
+        {/* Bottom Section */}
+        <div className="p-4 border-t border-blue-800 space-y-2">
+
+          {/* Switch to Admin Button */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin/approvals")}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors"
+            >
+              <Shield size={20} />
+              <span>Switch to Admin</span>
+            </button>
+          )}
+
           {/* Project Settings */}
-        <NavItem
-          icon={<Settings size={20} />}
-          label="Project Settings"
-          active={activeView === 'settings'}
-          onClick={() => {
-            setSelectedTeam(null);   // 🔥 important
-            setActiveView('settings');
-          }}
-        />
+          <NavItem
+            icon={<Settings size={20} />}
+            label="Project Settings"
+            active={activeView === 'settings'}
+            onClick={() => {
+              setSelectedTeam(null);   // 🔥 important
+              setActiveView('settings');
+            }}
+          />
 
-</div>
+        </div>
 
 
       </aside>
@@ -453,7 +448,7 @@ const filteredTickets = useMemo(() => {
               )}
 
               {viewMode === 'list' && (
-                <TicketList tickets={filteredTickets} />
+                <TicketList tickets={filteredTickets} isAdmin={isAdmin} onTicketClick={handleTicketClick} />
               )}
             </>
           ) : (
@@ -468,27 +463,27 @@ const filteredTickets = useMemo(() => {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-                
-                <div className="flex items-center gap-3">
-                   {/* Back Arrow */}
-                    {modalState !== 'selector' && (
-                      <button
-                        onClick={() => setModalState('selector')}
-                        className="p-2 rounded-md hover:bg-slate-100 hover:-translate-x-1 transition-all duration-200"
-                      >
-                        <ArrowLeft size={26} className="text-slate-600" />
-                      </button>
-                    )}
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
-                </h2>
-                <p className="text-slate-500 text-sm">
-                  {modalState === 'selector' ? 'Choose a category to get started' : selectedType?.description}
-                </p>
+              <div className="flex items-center gap-3">
+                {/* Back Arrow */}
+                {modalState !== 'selector' && (
+                  <button
+                    onClick={() => setModalState('selector')}
+                    className="p-2 rounded-md hover:bg-slate-100 hover:-translate-x-1 transition-all duration-200"
+                  >
+                    <ArrowLeft size={26} className="text-slate-600" />
+                  </button>
+                )}
+
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">
+                    {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
+                  </h2>
+                  <p className="text-slate-500 text-sm">
+                    {modalState === 'selector' ? 'Choose a category to get started' : selectedType?.description}
+                  </p>
+                </div>
               </div>
-            </div>      
               <button
                 onClick={() => setModalState('closed')}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
@@ -527,7 +522,7 @@ const filteredTickets = useMemo(() => {
           </div>
         </div>
       )}
-      
+
       {/* Ticket Detail Modal (Admin only) */}
       {selectedTicket && (
         <TicketDetailModal
@@ -538,7 +533,7 @@ const filteredTickets = useMemo(() => {
             setSelectedTicket(null);
           }}
           onSave={handleUpdateTicket}
-          isAdmin={true}
+          isAdmin={isAdmin}
         />
       )}
     </div>
@@ -582,11 +577,11 @@ const KanbanColumn: React.FC<{
     {/* The Ticket Box - Cards stay inside here now */}
     <div className="flex-1 bg-slate-100/50 rounded-lg p-2 flex flex-col gap-3 min-h-0 border border-slate-200 overflow-y-auto">
       {tickets.map(ticket => (
-  <div
-    key={ticket.id}
-    onClick={() => onTicketClick(ticket)}
-    className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
-  >
+        <div
+          key={ticket.id}
+          onClick={() => onTicketClick(ticket)}
+          className="bg-white p-3 rounded shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group shrink-0"
+        >
           <div className="text-sm font-medium text-slate-700 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
             {ticket.title}
           </div>
