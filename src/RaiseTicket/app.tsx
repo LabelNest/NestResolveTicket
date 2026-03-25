@@ -60,7 +60,7 @@ const App: React.FC = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
 //Ticket initializaing
   useEffect(() => {
