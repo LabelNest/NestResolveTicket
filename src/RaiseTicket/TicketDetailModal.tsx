@@ -502,24 +502,20 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
           )}
 
           {/* ─── NOTES / DESCRIPTION ─── */}
-          <div>
-            <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
-              {isAdmin ? 'Description (Editable)' : 'Description'}
-            </label>
-            {isAdmin ? (
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                rows={5}
-                placeholder="Type a description or add notes here"
-                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666]"
-              />
-            ) : (
-              <p className="text-sm text-[#bbb] bg-[#252525] rounded-md px-3 py-2.5 border border-[#333] min-h-[80px] whitespace-pre-wrap">
-                {description || <span className="italic text-[#555]">No description provided.</span>}
-              </p>
-            )}
-          </div>
+        {/* ─── NOTES / DESCRIPTION ─── */}
+              <div>
+                <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
+                  Description
+                </label>
+              
+                <p className="text-sm text-[#bbb] bg-[#252525] rounded-md px-3 py-2.5 border border-[#333] min-h-[80px] whitespace-pre-wrap">
+                  {description || (
+                    <span className="italic text-[#555]">
+                      No description provided.
+                    </span>
+                  )}
+                </p>
+              </div>
 
           {/* ─── CHECKLIST — admin only ─── */}
           {isAdmin && (
