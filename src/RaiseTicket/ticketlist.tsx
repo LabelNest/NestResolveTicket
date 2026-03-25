@@ -1,8 +1,8 @@
-import { Priority } from '../types';
+import { Priority } from './types';
 import { PRIORITY_COLORS } from './constants';
-import type { Ticket } from '../types';
-import { supabase } from "@/lib/supabaseClient";
- 
+import type { Ticket } from './types';
+import { supabase } from "../lib/supabaseClient";
+
 
 export default function TicketList({ tickets, isAdmin, onTicketClick }: { tickets: Ticket[]; isAdmin?: boolean; onTicketClick?: (ticket: Ticket) => void }) {
     if (!tickets.length) {
@@ -47,7 +47,6 @@ export default function TicketList({ tickets, isAdmin, onTicketClick }: { ticket
                         <th className="text-left px-4 py-3">Summary</th>
                         <th className="text-left px-4 py-3">Status</th>
                         <th className="text-left px-4 py-3">Priority</th>
-                        <th className="text-left px-4 py-3">Date</th>
                         <th className="text-left px-4 py-3">Created</th>
                     </tr>
                 </thead>
@@ -56,8 +55,8 @@ export default function TicketList({ tickets, isAdmin, onTicketClick }: { ticket
                     {tickets.map(ticket => (
                         <tr
                             key={ticket.id}
-                            onClick={() => isAdmin && onTicketClick?.(ticket)}
-                            className={`border-b hover:bg-slate-50 transition ${isAdmin ? 'cursor-pointer' : ''}`}
+                            onClick={() => onTicketClick?.(ticket)}
+                            className={`border-b hover:bg-slate-50 transition cursor-pointer`}
                         >
                             <td className="px-4 py-3 text-blue-600 font-medium">
                                 NR-{ticket.id.slice(0, 4)}
@@ -77,7 +76,7 @@ export default function TicketList({ tickets, isAdmin, onTicketClick }: { ticket
 
 
                             <td className="px-4 py-3 text-slate-500">
-                                {new Date(ticket.created_at).toLocaleDateString()}
+                                {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : '—'}
                             </td>
                         </tr>
                     ))}
