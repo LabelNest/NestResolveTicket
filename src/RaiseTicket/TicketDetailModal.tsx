@@ -34,14 +34,14 @@ interface TicketDetailModalProps {
 }
 
 interface TicketComment {
-  id: string;
+  id: number;
   ticket_id: string;
-  issue_origin: string;
   comment: string;
   created_by: string;
-  created_by_name: string;
-  created_by_email: string;
   created_at: string;
+  user?: {
+    nr_name: string;
+  };
 }
 
 // --- Priority config with colors ---
@@ -147,11 +147,18 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       setLoadingComments(true);
       const { data, error } = await supabase
         .from('nr_ticket_comments')
-        .select('*')
+        .select(`
+          id,
+          ticket_id,
+          comment,
+          created_by,
+          created_at,
+          user:nr_users!created_by ( nr_name )
+        `)
         .eq('ticket_id', ticket.id)
         .order('created_at', { ascending: true });
       if (!error && data) {
-        setComments(data);
+        setComments(data as unknown as TicketComment[]);
       }
       setLoadingComments(false);
     };
@@ -216,32 +223,30 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: userDetails } = await supabase
-      .from("nr_users")
-      .select("nr_name, nr_email")
-      .eq("nr_auth_user_id", user.id)
-      .single();
-
     const commentData = {
       ticket_id: ticket.id,
-      issue_origin: isExternal ? 'EXTERNAL' : 'INTERNAL',
       comment: newComment.trim(),
       created_by: user.id,
-      created_by_name: userDetails?.nr_name || 'Unknown',
-      created_by_email: userDetails?.nr_email || user.email || 'Unknown',
     };
 
     const { data, error } = await supabase
       .from('nr_ticket_comments')
       .insert([commentData])
-      .select()
+      .select(`
+        id,
+        ticket_id,
+        comment,
+        created_by,
+        created_at,
+        user:nr_users!created_by ( nr_name )
+      `)
       .single();
 
     if (error) {
       toast.error('Failed to post comment');
       console.error(error);
     } else if (data) {
-      setComments(prev => [...prev, data]);
+      setComments(prev => [...prev, data as unknown as TicketComment]);
       setNewComment('');
       toast.success('Comment posted');
     }
@@ -502,20 +507,24 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
           )}
 
           {/* ─── NOTES / DESCRIPTION ─── */}
-        {/* ─── NOTES / DESCRIPTION ─── */}
-              <div>
-                <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
-                  Description
-                </label>
-              
-                <p className="text-sm text-[#bbb] bg-[#252525] rounded-md px-3 py-2.5 border border-[#333] min-h-[80px] whitespace-pre-wrap">
-                  {description || (
-                    <span className="italic text-[#555]">
-                      No description provided.
-                    </span>
-                  )}
-                </p>
-              </div>
+          <div>
+            <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
+              {isAdmin ? 'Description (Editable)' : 'Description'}
+            </label>
+            {isAdmin ? (
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={5}
+                placeholder="Type a description or add notes here"
+                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666]"
+              />
+            ) : (
+              <p className="text-sm text-[#bbb] bg-[#252525] rounded-md px-3 py-2.5 border border-[#333] min-h-[80px] whitespace-pre-wrap">
+                {description || <span className="italic text-[#555]">No description provided.</span>}
+              </p>
+            )}
+          </div>
 
           {/* ─── CHECKLIST — admin only ─── */}
           {isAdmin && (
@@ -582,16 +591,18 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               ) : comments.length === 0 ? (
                 <p className="text-xs text-[#666] italic">No comments yet. Be the first to start the conversation.</p>
               ) : (
-                comments.map((cm) => (
+                comments.map((cm) => {
+                  const commenterName = cm.user?.nr_name || 'Unknown';
+                  return (
                   <div key={cm.id} className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center shrink-0 border border-blue-500/30">
                       <span className="text-xs font-bold text-blue-400">
-                        {cm.created_by_name?.charAt(0)?.toUpperCase() || '?'}
+                        {commenterName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 bg-[#252525] rounded-lg p-3 border border-[#333]">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold text-[#ddd]">{cm.created_by_name || 'Unknown'}</span>
+                        <span className="text-xs font-semibold text-[#ddd]">{commenterName}</span>
                         <span className="text-[10px] text-[#666]">
                           {new Date(cm.created_at).toLocaleString()}
                         </span>
@@ -599,7 +610,8 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                       <p className="text-sm text-[#bbb] whitespace-pre-wrap">{cm.comment}</p>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
 
