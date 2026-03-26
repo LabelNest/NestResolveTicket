@@ -257,8 +257,8 @@ const App: React.FC = () => {
   };
 
   const logout = async () => {
-  await supabase.auth.signOut();
-  navigate("/"); // or "/login"
+    await supabase.auth.signOut();
+    navigate("/"); // or "/login"
   };
 
   return (
@@ -343,102 +343,48 @@ const App: React.FC = () => {
 
         </nav>
 
-
-                {/* Sidebar */}
-                <aside className="flex flex-col h-full">
-                
-                  {/* Main Menu Section */}
-                  <div>
-                
-                    {/* Bottom Section */}
-                    <div className="p-4 border-t border-blue-800 space-y-2">
-                      {isAdmin ? (
-                        <button
-                          onClick={() => navigate("/admin/approvals")}
-                          className="
-                            group w-full flex items-center justify-between
-                            px-4 py-2 rounded-lg
-                            text-white/80
-                            hover:text-white
-                            bg-gradient-to-r from-transparent to-transparent
-                            hover:from-white/15 hover:to-white/5
-                            transition-all duration-300 ease-out
-                          "
-                        >
-                          <div className="flex items-center gap-2">
-                            <Shield
-                              size={18}
-                              className="transition-transform duration-300 group-hover:scale-110"
-                            />
-                            <span className="font-medium tracking-wide">
-                              Switch to Admin
-                            </span>
-                          </div>
-                
-                          <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            admin mode
-                          </span>
-                        </button>
-                      ) : null}
-                    </div>
-                
-                    {/* Project Settings */}
-                    <NavItem
-                      icon={<Settings size={20} />}
-                      label="Project Settings"
-                      active={activeView === 'settings'}
-                      onClick={() => {
-                        setSelectedTeam(null);
-                        setActiveView('settings');
-                      }}
-                    />
-                
-                  </div>
-                
-                  {/* Bottom (Logout pinned) */}
-                  <div className="mt-auto">
-                    
-                    <div className="border-t border-white/10 mx-4 my-2"></div>
-                
-                    <div className="p-4 pt-2">
-                      <button
-                        onClick={logout}
-                        className="
-                          group w-full flex items-center justify-between
-                          px-4 py-2 rounded-lg
-                          text-white/80
-                          hover:text-white
-                          bg-gradient-to-r from-transparent to-transparent
-                          hover:from-white/15 hover:to-white/5
-                          transition-all duration-300 ease-out
-                        "
-                      >
-                        <div className="flex items-center gap-2">
-                          <LogOut
-                            size={18}
-                            className="
-                              transition-transform duration-300
-                              group-hover:-translate-x-1
-                              group-hover:scale-110
-                            "
-                          />
-                          <span className="font-medium tracking-wide">
-                            Logout
-                          </span>
-                        </div>
-                
-                        <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          secure exit
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                
-                </aside>
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+{/* Bottom Section */} 
+        <div className="p-4 border-t border-blue-800 space-y-2"> 
+          {isAdmin ? ( <button onClick={() => navigate("/admin/approvals")} 
+          className=" group w-full flex items-center justify-between px-4 py-2 rounded-lg text-white/80 hover:text-white bg-gradient-to-r from-transparent to-transparent hover:from-white/15 hover:to-white/5 transition-all duration-300 ease-out " >
+            <div className="flex items-center gap-2"> 
+              <Shield size={18} className="transition-transform duration-300 group-hover:scale-110" /> 
+              <span className="font-medium tracking-wide">
+                Switch to Admin 
+              </span> 
+            </div> 
+            <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300"> 
+              admin mode 
+            </span> 
+          </button> ) : null} 
+        {/* Project Settings */} 
+        <NavItem icon={<Settings size={20} />} 
+          label="Project Settings" 
+          active={activeView === 'settings'} onClick={() => { setSelectedTeam(null); // 🔥 important 
+          setActiveView('settings'); }} /> 
+      </div> 
+      <div className="mt-auto"> 
+        {/* Divider */} 
+        <div className="border-t border-white/10 mx-4 my-2">
+        </div> 
+        {/* Logout */} 
+        <div className="p-4 pt-2"> 
+          <button onClick={logout} className=" group w-full flex items-center justify-between px-4 py-2 rounded-lg text-white/80 hover:text-white bg-gradient-to-r from-transparent to-transparent hover:from-white/15 hover:to-white/5 transition-all duration-300 ease-out " > 
+            <div className="flex items-center gap-2"> 
+              <LogOut size={18} className=" transition-transform duration-300 group-hover:-translate-x-1 group-hover:scale-110 " /> 
+              <span className="font-medium tracking-wide"> Logout
+              </span>
+            </div> 
+            <span className=" text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 " > secure exit 
+            </span>
+          </button>
+        </div> 
+      </div>
+    </aside>
+  {/* Main Content */}
+  <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    {/* Header */}
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-4 flex-1 max-w-xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -466,142 +412,146 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Board/Content Area */}
-        <div className="flex-1 overflow-auto p-6">
-          {activeView === 'board' ? (
-            <>
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-800">Resolve Inbox</h1>
-                  <p className="text-slate-500 text-sm">Manage and track company issues in real-time.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button type="button" className="p-2 hover:bg-white rounded border border-transparent hover:border-slate-200 transition-all text-slate-600" title="Filter tickets">
-                    <Filter size={20} />
-                  </button>
-                  <div className="h-6 w-px bg-slate-300 mx-2"></div>
-                  <div className="flex bg-slate-200 p-1 rounded-md">
-                    <button
-                      onClick={() => setViewMode('kanban')}
-                      title="Switch to Kanban view"
-                      className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
-                    >
-                      Kanban
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      title="Switch to List view"
-                      className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
-                    >
-                      List
-                    </button>
-                  </div>
-                </div>
-              </div>
+  {/* Board/Content Area */}
+  <div className="flex-1 overflow-auto p-6">
+    { activeView === 'board' ? (
+    <>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Resolve Inbox</h1>
+          <p className="text-slate-500 text-sm">Manage and track company issues in real-time.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" className="p-2 hover:bg-white rounded border border-transparent hover:border-slate-200 transition-all text-slate-600" title="Filter tickets">
+            <Filter size={20} />
+          </button>
+          <div className="h-6 w-px bg-slate-300 mx-2"></div>
+          <div className="flex bg-slate-200 p-1 rounded-md">
+            <button
+              onClick={() => setViewMode('kanban')}
+              title="Switch to Kanban view"
+              className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
+            >
+              Kanban
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              title="Switch to List view"
+              className={`px-3 py-1 text-sm font-medium rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
+            >
+              List
+            </button>
+          </div>
+        </div>
+      </div>
 
-              {viewMode === 'kanban' && (
-                <div className="flex gap-4 h-full pb-8">
-                  {(Object.values(TicketStatus) as TicketStatus[]).map(status => (
-                    <KanbanColumn
-                      key={status}
-                      status={status}
-                      tickets={filteredTickets.filter(t => t.status === status)}
-                      isAdmin={isAdmin}
-                      onTicketClick={handleTicketClick}
-                    />
-                  ))}
-                </div>
-              )}
+      {viewMode === 'kanban' && (
+        <div className="flex gap-4 h-full pb-8">
+          {(Object.values(TicketStatus) as TicketStatus[]).map(status => (
+            <KanbanColumn
+              key={status}
+              status={status}
+              tickets={filteredTickets.filter(t => t.status === status)}
+              isAdmin={isAdmin}
+              onTicketClick={handleTicketClick}
+            />
+          ))}
+        </div>
+      )}
 
-              {viewMode === 'list' && (
-                <TicketList tickets={filteredTickets} isAdmin={isAdmin} onTicketClick={handleTicketClick} />
-              )}
-            </>
-          ) : (
-            <ProjectSettings />
-          )}
+      {viewMode === 'list' && (
+        <TicketList tickets={filteredTickets} isAdmin={isAdmin} onTicketClick={handleTicketClick} />
+      )}
+    </>
+  ) : (
+    <ProjectSettings />
+  )}
         </div>
       </main>
 
-      {/* --- Modals --- */}
-      {modalState !== 'closed' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+  {/* --- Modals --- */}
+{
+  modalState !== 'closed' && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Modal Header */}
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
 
-              <div className="flex items-center gap-3">
-                {/* Back Arrow */}
-                {modalState !== 'selector' && (
-                  <button
-                    onClick={() => setModalState('selector')}
-                    className="p-2 rounded-md hover:bg-slate-100 hover:-translate-x-1 transition-all duration-200"
-                  >
-                    <ArrowLeft size={26} className="text-slate-600" />
-                  </button>
-                )}
-
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">
-                    {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
-                  </h2>
-                  <p className="text-slate-500 text-sm">
-                    {modalState === 'selector' ? 'Choose a category to get started' : selectedType?.description}
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-center gap-3">
+            {/* Back Arrow */}
+            {modalState !== 'selector' && (
               <button
-                onClick={() => setModalState('closed')}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                onClick={() => setModalState('selector')}
+                className="p-2 rounded-md hover:bg-slate-100 hover:-translate-x-1 transition-all duration-200"
               >
-                <X size={20} className="text-slate-400" />
+                <ArrowLeft size={26} className="text-slate-600" />
               </button>
-            </div>
+            )}
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {modalState === 'selector' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {TICKET_TYPES.map(type => (
-                    <button
-                      key={type.ticket_type}
-                      onClick={() => handleSelectType(type)}
-                      className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
-                    >
-                      <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">{type.icon}</span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-slate-800 group-hover:text-blue-700">{type.label}</h4>
-                        <p className="text-xs text-slate-500 line-clamp-2">{type.description}</p>
-                      </div>
-                      <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-400 shrink-0 self-center" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <DynamicForm
-                  schema={selectedType!.form_schema_json.fields}
-                  onSubmit={handleCreateTicket}
-                  onBack={() => setModalState('selector')}
-                />
-              )}
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                {modalState === 'selector' ? 'What kind of issue is this?' : `Raise ${selectedType?.label}`}
+              </h2>
+              <p className="text-slate-500 text-sm">
+                {modalState === 'selector' ? 'Choose a category to get started' : selectedType?.description}
+              </p>
             </div>
           </div>
+          <button
+            onClick={() => setModalState('closed')}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+          >
+            <X size={20} className="text-slate-400" />
+          </button>
         </div>
-      )}
 
-      {/* Ticket Detail Modal (Admin only) */}
-      {selectedTicket && (
-        <TicketDetailModal
-          ticket={selectedTicket}
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedTicket(null);
-          }}
-          onSave={handleUpdateTicket}
-          isAdmin={isAdmin}
-        />
-      )}
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {modalState === 'selector' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {TICKET_TYPES.map(type => (
+                <button
+                  key={type.ticket_type}
+                  onClick={() => handleSelectType(type)}
+                  className="flex items-start gap-4 p-4 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+                >
+                  <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">{type.icon}</span>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-slate-800 group-hover:text-blue-700">{type.label}</h4>
+                    <p className="text-xs text-slate-500 line-clamp-2">{type.description}</p>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-400 shrink-0 self-center" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <DynamicForm
+              schema={selectedType!.form_schema_json.fields}
+              onSubmit={handleCreateTicket}
+              onBack={() => setModalState('selector')}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+{/* Ticket Detail Modal (Admin only) */}
+{
+  selectedTicket && (
+    <TicketDetailModal
+      ticket={selectedTicket}
+      isOpen={isModalOpen}
+      onClose={() => {
+        setIsModalOpen(false);
+        setSelectedTicket(null);
+      }}
+      onSave={handleUpdateTicket}
+      isAdmin={isAdmin}
+    />
+  )
+}
     </div>
   );
 };
