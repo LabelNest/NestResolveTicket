@@ -344,26 +344,25 @@ const App: React.FC = () => {
         </nav>
 
 {/* Bottom Section */} 
-                <div className="p-4 border-t border-blue-800 space-y-2">
-                  {isAdmin ? (
-                    <button
-                      onClick={() => navigate("/admin/approvals")}
-                      className="
-                        w-full flex items-center gap-2
-                        px-4 py-2 rounded-lg
-                        text-white/80
-                        hover:text-white
-                        hover:bg-white/10
-                        transition-colors
-                      "
-                    >
-                      <Repeat size={18} />
-                      <span className="font-medium tracking-wide">
-                        Switch to Admin
-                      </span>
-                    </button>
-                  ) : null}
-                </div>    
+                    <div className="p-4 border-t border-blue-800 space-y-2"> 
+                      {isAdmin ? (
+                        <button
+                          onClick={() => navigate("/admin/approvals")}
+                          className="
+                            w-full flex items-center gap-2
+                            px-4 py-2 rounded-lg
+                            text-white/80
+                            hover:text-white
+                            hover:bg-white/10
+                            transition-colors
+                          "
+                        >
+                          <Repeat size={18} />
+                          <span className="font-medium tracking-wide">
+                            Switch to Admin
+                          </span>
+                        </button>
+                      ) : null}
       
         {/* Project Settings */} 
         <NavItem icon={<Settings size={20} />} 
