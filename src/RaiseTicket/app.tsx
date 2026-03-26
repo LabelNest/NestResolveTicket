@@ -342,8 +342,15 @@ const App: React.FC = () => {
           />
 
         </nav>
+      
+        {/* Project Settings */} 
+        <NavItem icon={<Settings size={20} />} 
+          label="Project Settings" 
+          active={activeView === 'settings'} onClick={() => { setSelectedTeam(null); // 🔥 important 
+          setActiveView('settings'); }} /> 
+      </div> 
 
-{/* Bottom Section */} 
+          {/* Switch to admin */} 
                     <div className="p-4 border-t border-blue-800 space-y-2"> 
                       {isAdmin ? (
                         <button
@@ -364,12 +371,6 @@ const App: React.FC = () => {
                         </button>
                       ) : null}
       
-        {/* Project Settings */} 
-        <NavItem icon={<Settings size={20} />} 
-          label="Project Settings" 
-          active={activeView === 'settings'} onClick={() => { setSelectedTeam(null); // 🔥 important 
-          setActiveView('settings'); }} /> 
-      </div> 
       <div className="mt-auto"> 
         {/* Divider */} 
         <div className="border-t border-white/10 mx-4 my-2">
