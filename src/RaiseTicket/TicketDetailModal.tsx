@@ -221,7 +221,11 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     if (!newComment.trim()) return;
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      toast.error('You must be logged in to comment');
+      console.error('handlePostComment: No authenticated user found');
+      return;
+    }
 
     const commentData = {
       ticket_id: ticket.id,
@@ -229,24 +233,39 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
       created_by: user.id,
     };
 
+    console.log('Posting comment with data:', commentData);
+
+    // Step 1: Insert the comment (without join in select)
     const { data, error } = await supabase
       .from('nr_ticket_comments')
       .insert([commentData])
-      .select(`
-        id,
-        ticket_id,
-        comment,
-        created_by,
-        created_at,
-        user:nr_users!created_by ( nr_name )
-      `)
+      .select('id, ticket_id, comment, created_by, created_at')
       .single();
 
     if (error) {
       toast.error('Failed to post comment');
-      console.error(error);
-    } else if (data) {
-      setComments(prev => [...prev, data as unknown as TicketComment]);
+      console.error('Insert comment error:', error.message, error.details, error.hint, error.code);
+      return;
+    }
+
+    if (data) {
+      // Step 2: Fetch the user's name for display
+      const { data: userData } = await supabase
+        .from('nr_users')
+        .select('nr_name')
+        .eq('nr_auth_user_id', user.id)
+        .single();
+
+      const newCommentObj: TicketComment = {
+        id: data.id,
+        ticket_id: data.ticket_id,
+        comment: data.comment,
+        created_by: data.created_by,
+        created_at: data.created_at,
+        user: userData ? { nr_name: userData.nr_name } : undefined,
+      };
+
+      setComments(prev => [...prev, newCommentObj]);
       setNewComment('');
       toast.success('Comment posted');
     }
@@ -507,24 +526,19 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
           )}
 
           {/* ─── NOTES / DESCRIPTION ─── */}
-          <div>
-            <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
-              {isAdmin ? 'Description (Editable)' : 'Description'}
-            </label>
-            {isAdmin ? (
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                rows={5}
-                placeholder="Type a description or add notes here"
-                className="w-full bg-[#2d2d2d] text-white text-sm rounded-md px-3 py-2.5 border border-[#444] focus:border-blue-500 outline-none resize-none transition-colors placeholder:text-[#666]"
-              />
-            ) : (
+            <div>
+              <label className="text-[11px] font-semibold text-[#999] uppercase tracking-wider mb-1.5 block">
+                Description
+              </label>
+            
               <p className="text-sm text-[#bbb] bg-[#252525] rounded-md px-3 py-2.5 border border-[#333] min-h-[80px] whitespace-pre-wrap">
-                {description || <span className="italic text-[#555]">No description provided.</span>}
+                {description || (
+                  <span className="italic text-[#555]">
+                    No description provided.
+                  </span>
+                )}
               </p>
-            )}
-          </div>
+            </div>
 
           {/* ─── CHECKLIST — admin only ─── */}
           {isAdmin && (
