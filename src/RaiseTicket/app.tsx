@@ -28,7 +28,8 @@ import {
   MoreHorizontal,
   Kanban,
   List,
-  Inbox
+  Inbox,
+  LogOut
 } from 'lucide-react';
 import TicketList from './ticketlist';
 import TicketDetailModal from './TicketDetailModal'; // admin edit part
@@ -255,6 +256,10 @@ const App: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const logout = async () => {
+  await supabase.auth.signOut();
+  navigate("/"); // or "/login"
+  };
 
   return (
     <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
@@ -366,7 +371,52 @@ const App: React.FC = () => {
 
         </div>
 
-
+          <div className="mt-auto">
+          
+            {/* Divider */}
+            <div className="border-t border-white/10 mx-4 my-2"></div>
+          
+            {/* Logout */}
+            <div className="p-4 pt-2">
+              <button
+                onClick={logout}
+                className="
+                  group w-full flex items-center justify-between
+                  px-4 py-2 rounded-lg
+                  text-white/80
+                  hover:text-white
+                  bg-gradient-to-r from-transparent to-transparent
+                  hover:from-white/15 hover:to-white/5
+                  transition-all duration-300 ease-out
+                "
+              >
+                <div className="flex items-center gap-2">
+                  <LogOut
+                    size={18}
+                    className="
+                      transition-transform duration-300
+                      group-hover:-translate-x-1
+                      group-hover:scale-110
+                    "
+                  />
+                  <span className="font-medium tracking-wide">
+                    Logout
+                  </span>
+                </div>
+          
+                <span
+                  className="
+                    text-xs opacity-0
+                    group-hover:opacity-100
+                    transition-opacity duration-300
+                  "
+                >
+                  secure exit
+                </span>
+              </button>
+            </div>
+          </div>
+      
       </aside>
 
       {/* Main Content */}
