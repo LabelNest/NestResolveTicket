@@ -346,47 +346,35 @@ const App: React.FC = () => {
 
         {/* Bottom Section */}
         <div className="p-4 border-t border-blue-800 space-y-2">
-
-            {/* Switch to Admin Button */}
-            {isAdmin && (
-              <button
-                onClick={() => navigate("/admin/approvals")}
-                className="
-                  group w-full flex items-center justify-between
-                  px-4 py-2 rounded-lg
-                  text-white/80
-                  hover:text-white
-                  bg-gradient-to-r from-transparent to-transparent
-                  hover:from-white/15 hover:to-white/5
-                  transition-all duration-300 ease-out
-                "
-              >
-                <div className="flex items-center gap-2">
-                  <Shield
-                    size={18}
-                    className="
-                      transition-transform duration-300
-                      group-hover:scale-110
-                    "
-                  />
-                  <span className="font-medium tracking-wide">
-                    Switch to Admin
-                  </span>
-                </div>
-          
-                <span
-                  className="
-                    text-xs opacity-0
-                    group-hover:opacity-100
-                    transition-opacity duration-300
-                  "
-                >
-                  admin mode
+          {isAdmin ? (
+            <button
+              onClick={() => navigate("/admin/approvals")}
+              className="
+                group w-full flex items-center justify-between
+                px-4 py-2 rounded-lg
+                text-white/80
+                hover:text-white
+                bg-gradient-to-r from-transparent to-transparent
+                hover:from-white/15 hover:to-white/5
+                transition-all duration-300 ease-out
+              "
+            >
+              <div className="flex items-center gap-2">
+                <Shield
+                  size={18}
+                  className="transition-transform duration-300 group-hover:scale-110"
+                />
+                <span className="font-medium tracking-wide">
+                  Switch to Admin
                 </span>
-              </button>
-            )}
-          
-          </div>
+              </div>
+        
+              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                admin mode
+              </span>
+            </button>
+          ) : null}
+        </div>
 
           
           {/* Project Settings */}
