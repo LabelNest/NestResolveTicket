@@ -350,89 +350,69 @@ const App: React.FC = () => {
 
         </nav>
       
-   {/* Project Settings */} 
-<NavItem 
-  icon={<Settings size={20} />} 
-  label="Project Settings" 
-  active={activeView === 'settings'} 
-  onClick={() => { 
-    setSelectedTeam(null); 
-    setActiveView('settings'); 
-  }} 
-/> 
+{/* Project Settings */}
+<div className="mt-6 px-2">
+  <NavItem
+    icon={<Settings size={20} />}
+    label="Project Settings"
+    active={activeView === 'settings'}
+    onClick={() => {
+      setSelectedTeam(null);
+      setActiveView('settings');
+    }}
+  />
+</div>
 
-  {/* Switch to admin */} 
-      <div className="p-4 border-t border-blue-800 space-y-2"> 
-        {isAdmin ? (
-          <button
-            onClick={switchToAdmin}
-            className="
-              group w-full flex items-center justify-between
-              px-4 py-2 rounded-lg
-              text-white/80
-              hover:text-white
-              bg-gradient-to-r from-transparent to-transparent
-              hover:from-white/15 hover:to-white/5
-              transition-all duration-300 ease-out
-            "
-          >
-            <div className="flex items-center gap-2">
-              <Repeat
-                size={18}
-                className="transition-transform duration-300 group-hover:rotate-180"
-              />
-              <span className="font-medium tracking-wide">
-                Switch to Admin
-              </span>
-            </div>
-          </button>
-        ) : null}
-      </div>
+{/* Bottom Section */}
+<div className="mt-auto flex flex-col">
 
+  {/* Divider */}
+  <div className="border-t border-white/10 mx-4 my-3"></div>
 
-    <div className="mt-auto"> 
-    {/* Divider */} 
-    <div className="border-t border-white/10 mx-4 my-2"></div> 
+  {/* Switch to Admin */}
+  <div className="px-4 pb-2">
+    {isAdmin && (
+      <button
+        onClick={switchToAdmin}
+        className="
+          w-full flex items-center gap-2
+          px-4 py-2 rounded-lg
+          text-white/80
+          hover:text-white
+          hover:bg-white/10
+          transition-colors
+        "
+      >
+        <Repeat size={18} />
+        <span className="font-medium tracking-wide">
+          Switch to Admin
+        </span>
+      </button>
+    )}
+  </div>
 
-  {/* Logout */} 
-  <div className="p-4 pt-2"> 
-    <button 
-      onClick={logout} 
+  {/* Logout */}
+  <div className="px-4 pb-4">
+    <button
+      onClick={logout}
       className="
-        group w-full flex items-center justify-between
+        w-full flex items-center gap-2
         px-4 py-2 rounded-lg
         text-white/80
         hover:text-white
-        bg-gradient-to-r from-transparent to-transparent
-        hover:from-white/15 hover:to-white/5
-        transition-all duration-300 ease-out
+        hover:bg-white/10
+        transition-colors
       "
-    > 
-      <div className="flex items-center gap-2"> 
-        <LogOut 
-          size={18} 
-          className="
-            transition-transform duration-300
-            group-hover:-translate-x-1
-            group-hover:scale-110
-          " 
-        /> 
-        <span className="font-medium tracking-wide"> 
-          Logout
-        </span>
-      </div> 
-
-      <span className="
-        text-xs opacity-0
-        group-hover:opacity-100
-        transition-opacity duration-300
-      "> 
-        secure exit 
+    >
+      <LogOut size={18} />
+      <span className="font-medium tracking-wide">
+        Logout
       </span>
     </button>
-  </div> 
+  </div>
 </div>
-      </aside>
+      
+</aside>
       
   {/* Main Content */}
   <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
