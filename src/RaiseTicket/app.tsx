@@ -261,6 +261,13 @@ const App: React.FC = () => {
     navigate("/"); // or "/login"
   };
 
+  
+  const switchToAdmin = () => {
+  localStorage.setItem("view_mode", "admin"); // 🔥 important
+  navigate("/admin/approvals");
+  };
+  
+  
   return (
     <div className="flex h-screen overflow-hidden text-slate-900 bg-[#F4F5F7]">
       {/* Sidebar */}
@@ -354,31 +361,38 @@ const App: React.FC = () => {
   }} 
 /> 
 
-{/* Switch to admin */} 
-<div className="p-4 border-t border-blue-800 space-y-2"> 
-  {isAdmin ? (
-    <button
-      onClick={() => navigate("/admin/approvals")}
-      className="
-        w-full flex items-center gap-2
-        px-4 py-2 rounded-lg
-        text-white/80
-        hover:text-white
-        hover:bg-white/10
-        transition-colors
-      "
-    >
-      <Repeat size={18} />
-      <span className="font-medium tracking-wide">
-        Switch to Admin
-      </span>
-    </button>
-  ) : null}
-</div>
+  {/* Switch to admin */} 
+      <div className="p-4 border-t border-blue-800 space-y-2"> 
+        {isAdmin ? (
+          <button
+            onClick={switchToAdmin}
+            className="
+              group w-full flex items-center justify-between
+              px-4 py-2 rounded-lg
+              text-white/80
+              hover:text-white
+              bg-gradient-to-r from-transparent to-transparent
+              hover:from-white/15 hover:to-white/5
+              transition-all duration-300 ease-out
+            "
+          >
+            <div className="flex items-center gap-2">
+              <Repeat
+                size={18}
+                className="transition-transform duration-300 group-hover:rotate-180"
+              />
+              <span className="font-medium tracking-wide">
+                Switch to Admin
+              </span>
+            </div>
+          </button>
+        ) : null}
+      </div>
 
-<div className="mt-auto"> 
-  {/* Divider */} 
-  <div className="border-t border-white/10 mx-4 my-2"></div> 
+
+    <div className="mt-auto"> 
+    {/* Divider */} 
+    <div className="border-t border-white/10 mx-4 my-2"></div> 
 
   {/* Logout */} 
   <div className="p-4 pt-2"> 
